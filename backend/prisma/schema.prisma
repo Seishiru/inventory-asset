@@ -1,0 +1,51 @@
+// prisma/schema.prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id       Int      @id @default(autoincrement())
+  username String   @unique
+  email    String   @unique
+  password String
+  role     String   @default("user")
+  
+  @@map("users")
+}
+
+model Asset {
+  id           String    @id @default(cuid())
+  index        Int       @default(autoincrement()) @unique
+  image        String?
+  assetType    String
+  brandMake    String
+  modelNumber  String
+  serialNumber String    @unique
+  barcode      String?   @unique
+  description  String?
+  status       String    @default("Active")
+  location     String
+  userName     String
+  createdBy    String
+  modifiedBy   String
+  createdAt    DateTime  @default(now())
+  lastUpdated  DateTime  @updatedAt
+  customFields Json?
+  auditLog     Json?
+  attachments  Json?
+  comments     Json?
+  
+  @@map("assets")
+}
+
+model Brand {
+  id   Int    @id @default(autoincrement())
+  name String @unique
+  
+  @@map("brands")
+}
