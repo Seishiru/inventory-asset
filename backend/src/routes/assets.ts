@@ -12,4 +12,8 @@ router.put("/:id", AssetsController.updateAsset);
 router.delete("/:id", AssetsController.deleteAsset);
 router.post("/:id/duplicate", AssetsController.duplicateAsset);
 
+// NEW: Barcode routes
+router.post("/:id/generate-barcode", AssetsController.generateBarcode);
+router.get("/:id/barcode", AssetsController.getBarcode);
+
 export default router;

@@ -32,7 +32,7 @@ export interface Asset {
   serialNumber: string;
   barcode?: string;
   description?: string;
-  status: 'Active' | 'Inactive' | 'Maintenance' | 'Retired';
+  status: 'On-Stock' | 'Inactive' | 'Maintenance' | 'Retired' | 'Reserve' | 'Issued';
   location: string;
   userName: string;
   createdBy: string;
@@ -55,9 +55,11 @@ interface AssetDialogProps {
   customColumns?: string[];
   editAsset?: Asset;
   brandOptions?: string[];
+  assetTypeOptions?: string[];
+  userOptions?: string[];
 }
 
-export function AssetDialog({ open, onClose, onSave, onDelete, onDuplicate, currentUser, customColumns = [], editAsset, brandOptions = [] }: AssetDialogProps) {
+export function AssetDialog({ open, onClose, onSave, onDelete, onDuplicate, currentUser, customColumns = [], editAsset, brandOptions = [], assetTypeOptions = [], userOptions = [] }: AssetDialogProps) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [formData, setFormData] = useState<Omit<Asset, 'id' | 'index' | 'createdAt' | 'lastUpdated'>>({
     image: '',
@@ -67,7 +69,7 @@ export function AssetDialog({ open, onClose, onSave, onDelete, onDuplicate, curr
     serialNumber: '',
     barcode: '',
     description: '',
-    status: 'Active',
+    status: 'On-Stock',
     location: '',
     userName: '',
     createdBy: currentUser,
@@ -107,7 +109,7 @@ export function AssetDialog({ open, onClose, onSave, onDelete, onDuplicate, curr
         serialNumber: '',
         barcode: '',
         description: '',
-        status: 'Active',
+        status: 'On-Stock',
         location: '',
         userName: '',
         createdBy: currentUser,
@@ -213,21 +215,36 @@ export function AssetDialog({ open, onClose, onSave, onDelete, onDuplicate, curr
             <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="details">Details</TabsTrigger>
               <TabsTrigger value="attachments">Attachments</TabsTrigger>
-              <TabsTrigger value="comments">Comments</TabsTrigger>
-              <TabsTrigger value="activity">Activity Log</TabsTrigger>
+              {editAsset && <TabsTrigger value="comments">Comments</TabsTrigger>}
+              {editAsset && <TabsTrigger value="activity">Activity Log</TabsTrigger>}
             </TabsList>
 
             <TabsContent value="details" className="space-y-4 py-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="assetType">Asset Type *</Label>
-                  <Input
-                    id="assetType"
+                  <Select
                     value={formData.assetType}
-                    onChange={(e) => setFormData({ ...formData, assetType: e.target.value })}
-                    placeholder="e.g., Laptop, Monitor, Chair"
+                    onValueChange={(value) => setFormData({ ...formData, assetType: value })}
                     required
-                  />
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select an asset type..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {assetTypeOptions.length > 0 ? (
+                        assetTypeOptions.map((assetType) => (
+                          <SelectItem key={assetType} value={assetType}>
+                            {assetType}
+                          </SelectItem>
+                        ))
+                      ) : (
+                        <SelectItem value="" disabled>
+                          No asset types available. Add asset types in Settings.
+                        </SelectItem>
+                      )}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="brandMake">Brand/Make *</Label>
@@ -314,10 +331,12 @@ export function AssetDialog({ open, onClose, onSave, onDelete, onDuplicate, curr
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Active">Active</SelectItem>
+                      <SelectItem value="On-Stock">On-Stock</SelectItem>
                       <SelectItem value="Inactive">Inactive</SelectItem>
                       <SelectItem value="Maintenance">Maintenance</SelectItem>
                       <SelectItem value="Retired">Retired</SelectItem>
+                      <SelectItem value="Reserve">Reserve</SelectItem>
+                      <SelectItem value="Issued">Issued</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -335,13 +354,21 @@ export function AssetDialog({ open, onClose, onSave, onDelete, onDuplicate, curr
 
               <div className="space-y-2">
                 <Label htmlFor="userName">User Name *</Label>
-                <Input
-                  id="userName"
+                <Select
                   value={formData.userName}
-                  onChange={(e) => setFormData({ ...formData, userName: e.target.value })}
-                  placeholder="e.g., John Doe"
-                  required
-                />
+                  onValueChange={(value) => setFormData({ ...formData, userName: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select user name..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {userOptions.map((user) => (
+                      <SelectItem key={user} value={user}>
+                        {user}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-2">
@@ -415,19 +442,23 @@ export function AssetDialog({ open, onClose, onSave, onDelete, onDuplicate, curr
               />
             </TabsContent>
 
-            <TabsContent value="comments" className="py-4">
-              <CommentsSection
-                comments={formData.comments || []}
-                onAddComment={handleAddComment}
-                onEditComment={handleEditComment}
-                onDeleteComment={handleDeleteComment}
-                currentUser={currentUser}
-              />
-            </TabsContent>
+            {editAsset && (
+              <TabsContent value="comments" className="py-4">
+                <CommentsSection
+                  comments={formData.comments || []}
+                  onAddComment={handleAddComment}
+                  onEditComment={handleEditComment}
+                  onDeleteComment={handleDeleteComment}
+                  currentUser={currentUser}
+                />
+              </TabsContent>
+            )}
 
-            <TabsContent value="activity" className="py-4">
-              <AuditLog entries={formData.auditLog || []} />
-            </TabsContent>
+            {editAsset && (
+              <TabsContent value="activity" className="py-4">
+                <AuditLog entries={formData.auditLog || []} />
+              </TabsContent>
+            )}
           </Tabs>
 
           <DialogFooter className="flex justify-between mt-4">

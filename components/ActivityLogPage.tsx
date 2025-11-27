@@ -18,14 +18,12 @@ export interface ActivityLogEntry {
 interface ActivityLogPageProps {
   open: boolean;
   onClose: () => void;
-  darkMode: boolean;
   activities: ActivityLogEntry[];
 }
 
 export function ActivityLogPage({
   open,
   onClose,
-  darkMode,
   activities,
 }: ActivityLogPageProps) {
   const getActivityColor = (type: ActivityLogEntry['type']) => {
@@ -95,15 +93,11 @@ export function ActivityLogPage({
         className={`fixed inset-0 z-50 flex items-center justify-center p-4`}
       >
         <div
-          className={`w-full max-w-4xl h-[90vh] rounded-lg shadow-2xl flex flex-col ${
-            darkMode ? 'bg-gray-900' : 'bg-white'
-          }`}
+          className="w-full max-w-4xl h-[90vh] rounded-lg shadow-2xl flex flex-col bg-white"
         >
           {/* Header */}
           <div
-            className={`flex items-center justify-between p-6 border-b ${
-              darkMode ? 'border-gray-700' : 'border-gray-200'
-            }`}
+            className="flex items-center justify-between p-6 border-b border-gray-200"
             style={{ borderBottomColor: LINE_GREEN }}
           >
             <div className="flex items-center gap-3">
@@ -114,10 +108,10 @@ export function ActivityLogPage({
                 <Activity className="h-5 w-5" />
               </div>
               <div>
-                <h2 className={`text-2xl ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                <h2 className="text-2xl text-gray-900">
                   Activity Log
                 </h2>
-                <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                <p className="text-sm text-gray-600">
                   Complete history of all actions performed
                 </p>
               </div>
@@ -126,7 +120,7 @@ export function ActivityLogPage({
               variant="ghost"
               size="sm"
               onClick={onClose}
-              className={`h-10 w-10 p-0 ${darkMode ? 'hover:bg-gray-800' : 'hover:bg-gray-100'}`}
+              className="h-10 w-10 p-0 hover:bg-gray-100"
             >
               <X className="h-5 w-5" />
             </Button>
@@ -134,20 +128,18 @@ export function ActivityLogPage({
 
           {/* Stats Bar */}
           <div
-            className={`flex items-center gap-4 px-6 py-4 border-b ${
-              darkMode ? 'bg-gray-800/50 border-gray-700' : 'bg-gray-50 border-gray-200'
-            }`}
+            className="flex items-center gap-4 px-6 py-4 border-b bg-gray-50 border-gray-200"
           >
             <div className="flex items-center gap-2">
               <Activity className="h-4 w-4" style={{ color: LINE_GREEN }} />
-              <span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+              <span className="text-sm text-gray-700">
                 Total Activities: <strong>{activities.length}</strong>
               </span>
             </div>
             <Separator orientation="vertical" className="h-4" />
             <div className="flex items-center gap-2">
               <Clock className="h-4 w-4" style={{ color: LINE_GREEN }} />
-              <span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+              <span className="text-sm text-gray-700">
                 Last Updated: <strong>{activities.length > 0 ? formatTimestamp(activities[0].timestamp) : 'N/A'}</strong>
               </span>
             </div>
@@ -157,11 +149,11 @@ export function ActivityLogPage({
           <ScrollArea className="flex-1 px-6 py-4">
             {activities.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full">
-                <Activity className={`h-16 w-16 mb-4 ${darkMode ? 'text-gray-600' : 'text-gray-300'}`} />
-                <p className={`text-lg ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                <Activity className="h-16 w-16 mb-4 text-gray-300" />
+                <p className="text-lg text-gray-600">
                   No activities recorded yet
                 </p>
-                <p className={`text-sm ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+                <p className="text-sm text-gray-400">
                   Activities will appear here as you use the application
                 </p>
               </div>
@@ -172,13 +164,11 @@ export function ActivityLogPage({
                     {/* Date Header */}
                     <div className="flex items-center gap-2 sticky top-0 py-2 z-10"
                       style={{ 
-                        backgroundColor: darkMode ? '#111827' : '#ffffff'
+                        backgroundColor: '#ffffff'
                       }}
                     >
                       <div
-                        className={`text-sm px-3 py-1 rounded-full ${
-                          darkMode ? 'bg-gray-800 text-gray-300' : 'bg-gray-100 text-gray-700'
-                        }`}
+                        className="text-sm px-3 py-1 rounded-full bg-gray-100 text-gray-700"
                       >
                         {new Date(dateKey).toLocaleDateString('en-US', {
                           weekday: 'long',
@@ -187,7 +177,7 @@ export function ActivityLogPage({
                           year: 'numeric',
                         })}
                       </div>
-                      <div className="flex-1 h-px bg-gray-300 dark:bg-gray-700" />
+                      <div className="flex-1 h-px bg-gray-300" />
                     </div>
 
                     {/* Activities for this date */}
@@ -195,11 +185,7 @@ export function ActivityLogPage({
                       {groupedActivities[dateKey].map((activity) => (
                         <div
                           key={activity.id}
-                          className={`p-4 rounded-lg border transition-all hover:shadow-md ${
-                            darkMode
-                              ? 'bg-gray-800 border-gray-700 hover:bg-gray-750'
-                              : 'bg-white border-gray-200 hover:bg-gray-50'
-                          }`}
+                          className="p-4 rounded-lg border transition-all hover:shadow-md bg-white border-gray-200 hover:bg-gray-50"
                         >
                           <div className="flex items-start gap-3">
                             {/* Timeline Dot */}
@@ -208,7 +194,7 @@ export function ActivityLogPage({
                                 className="h-3 w-3 rounded-full"
                                 style={{ backgroundColor: getActivityColor(activity.type) }}
                               />
-                              <div className={`w-px h-full mt-1 ${darkMode ? 'bg-gray-700' : 'bg-gray-200'}`} />
+                              <div className="w-px h-full mt-1 bg-gray-200" />
                             </div>
 
                             {/* Content */}
@@ -225,20 +211,20 @@ export function ActivityLogPage({
                                   {activity.type}
                                 </Badge>
                                 <span
-                                  className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}
+                                  className="text-xs text-gray-500"
                                 >
                                   {formatTimestamp(activity.timestamp)}
                                 </span>
                               </div>
 
                               <div className="flex items-start gap-2">
-                                <User className={`h-4 w-4 mt-0.5 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`} />
+                                <User className="h-4 w-4 mt-0.5 text-gray-500" />
                                 <div className="flex-1">
-                                  <p className={`text-sm ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                                  <p className="text-sm text-gray-900">
                                     <strong>{activity.username}</strong> {activity.action}
                                   </p>
                                   {activity.details && (
-                                    <p className={`text-sm mt-1 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                                    <p className="text-sm mt-1 text-gray-600">
                                       {activity.details}
                                     </p>
                                   )}

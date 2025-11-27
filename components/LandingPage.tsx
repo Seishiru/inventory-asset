@@ -1,10 +1,10 @@
-import { Package, Archive, FileText } from 'lucide-react';
+import { Package, FileText, Users, Activity } from 'lucide-react';
 import { Card, CardContent } from './ui/card';
 
 const LINE_GREEN = '#06C755';
 
 interface LandingPageProps {
-  onNavigate: (page: 'inventory' | 'stock' | 'reports') => void;
+  onNavigate: (page: 'inventory' | 'user-management' | 'reports' | 'monthly-reports' | 'activity-log') => void;
 }
 
 export function LandingPage({ onNavigate }: LandingPageProps) {
@@ -17,18 +17,25 @@ export function LandingPage({ onNavigate }: LandingPageProps) {
       available: true,
     },
     {
-      id: 'stock' as const,
-      title: 'Stock Assets',
-      description: 'Monitor stock levels and warehouse inventory',
-      icon: Archive,
-      available: false,
+      id: 'user-management' as const,
+      title: 'User Management',
+      description: 'Manage system users and permissions',
+      icon: Users,
+      available: true,
     },
     {
-      id: 'reports' as const,
-      title: 'Reports',
-      description: 'Generate reports and analytics',
+      id: 'monthly-reports' as const,
+      title: 'Monthly Reports',
+      description: 'View monthly inventory summary reports with analytics',
       icon: FileText,
-      available: false,
+      available: true,
+    },
+    {
+      id: 'activity-log' as const,
+      title: 'Activity Log',
+      description: 'View complete history of all system activities',
+      icon: Activity,
+      available: true,
     },
   ];
 

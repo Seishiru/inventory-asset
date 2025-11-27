@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { Button } from './components/ui/button';
 import { Badge } from './components/ui/badge';
 import { Checkbox } from './components/ui/checkbox';
@@ -27,42 +27,118 @@ import {
 import { Label } from './components/ui/label';
 import { AssetDialog, Asset } from './components/AssetDialog';
 import { FilterBar } from './components/FilterBar';
-import { ExportMenu } from './components/ExportMenu';
-import { BackupMenu } from './components/BackupMenu';
-import { ImportMenu } from './components/ImportMenu';
 import { BulkActionsMenu } from './components/BulkActionsMenu';
+import { ImportExportBackupMenu } from './components/ImportExportBackupMenu';
+import { ColumnOptionsMenu } from './components/ColumnOptionsMenu';
 import { KeyboardShortcuts } from './components/KeyboardShortcuts';
-import { ImageWithFallback } from './components/figma/ImageWithFallback';
+// Removed unused `ImageWithFallback` import (not referenced in this file)
 import { AuthProvider, useAuth } from './components/AuthContext';
 import { LoginDialog } from './components/LoginDialog';
 import { SignupDialog } from './components/SignupDialog';
 import { SettingsPanel } from './components/SettingsPanel';
 import { SettingsTab } from './components/SettingsTab';
 import { ActivityLogPage, ActivityLogEntry } from './components/ActivityLogPage';
+import { ActivityLogFullPage } from './components/ActivityLogFullPage';
 import { LandingPage } from './components/LandingPage';
 import { InventoryPage } from './components/InventoryPage';
-import { StockPage } from './components/StockPage';
+import { UserManagementPage, User } from './components/UserManagementPage';
 import { ReportsPage } from './components/ReportsPage';
-import { Plus, Package, X, ArrowUpDown, ArrowUp, ArrowDown, Trash2, MessageSquare, Lock, Unlock, User } from 'lucide-react';
+import { AccessoriesDialog, Accessory } from './components/AccessoriesDialog';
+import { AccessoriesTable } from './components/AccessoriesTable';
+import { StatusSelectionDialog } from './components/StatusSelectionDialog';
+import { ActionDialog } from './components/ActionDialog';
+import { DashboardDropdown } from './components/DashboardDropdown';
+import { DeleteAccessoryDialog } from './components/DeleteAccessoryDialog';
+import { MonthlyReportsPage } from './components/MonthlyReportsPage';
+import { Plus, Package, X, ArrowUpDown, ArrowUp, ArrowDown, Trash2, Lock, Unlock, User as UserIcon, ArrowLeft, Users } from 'lucide-react';
 import { toast, Toaster } from 'sonner';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import * as XLSX from 'xlsx';
 import type { AuditEntry } from './components/AuditLog';
-import "./styles/index.css";  
+import "./styles/globals.css";
 
 const LINE_GREEN = '#06C755';
 
+const initialAssets: Asset[] = [
+  {
+    id: '1',
+    index: 0,
+    image: undefined,
+    assetType: 'Laptop',
+    brandMake: 'Apple',
+    modelNumber: 'MBP-16-2024',
+    serialNumber: 'SN1234567890',
+    barcode: '',
+    description: '',
+    status: 'On-Stock',
+    location: 'Office - Desk 12',
+    userName: 'John Smith',
+    createdBy: 'Admin User',
+    modifiedBy: 'Admin User',
+    createdAt: new Date().toISOString(),
+    lastUpdated: new Date().toISOString(),
+    customFields: {},
+    auditLog: [],
+    attachments: [],
+    comments: [],
+  },
+  {
+    id: '2',
+    index: 1,
+    image: undefined,
+    assetType: 'Chair',
+    brandMake: 'Herman Miller',
+    modelNumber: 'Aeron-2023',
+    serialNumber: 'SN0987654321',
+    barcode: '',
+    description: '',
+    status: 'On-Stock',
+    location: 'Office - Desk 12',
+    userName: 'John Smith',
+    createdBy: 'Admin User',
+    modifiedBy: 'Admin User',
+    createdAt: new Date().toISOString(),
+    lastUpdated: new Date().toISOString(),
+    customFields: {},
+    auditLog: [],
+    attachments: [],
+    comments: [],
+  },
+  {
+    id: '3',
+    index: 2,
+    image: undefined,
+    assetType: 'Monitor',
+    brandMake: 'Dell',
+    modelNumber: 'U2723DE',
+    serialNumber: 'SN1122334455',
+    barcode: '',
+    description: '',
+    status: 'Maintenance',
+    location: 'Warehouse',
+    userName: 'Unassigned',
+    createdBy: 'Admin User',
+    modifiedBy: 'Admin User',
+    createdAt: new Date().toISOString(),
+    lastUpdated: new Date().toISOString(),
+    customFields: {},
+    auditLog: [],
+    attachments: [],
+    comments: [],
+  },
+];
+
 interface AssetInventoryProps {
   onBackToLanding: () => void;
+  onNavigateToActivityLog?: () => void;
 }
 
-function AssetInventory({ onBackToLanding }: AssetInventoryProps) {
+function AssetInventory({ onBackToLanding, onNavigateToActivityLog }: AssetInventoryProps) {
   const { user } = useAuth();
   const CURRENT_USER = user?.username || 'Admin User';
   
-  const [assets, setAssets] = useState<Asset[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [assets, setAssets] = useState<Asset[]>(initialAssets);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingAsset, setEditingAsset] = useState<Asset | undefined>(undefined);
   const [searchTerm, setSearchTerm] = useState('');
@@ -86,18 +162,215 @@ function AssetInventory({ onBackToLanding }: AssetInventoryProps) {
   
   // Settings panel state
   const [settingsPanelOpen, setSettingsPanelOpen] = useState(false);
-  const [darkMode, setDarkMode] = useState(() => {
-    const saved = localStorage.getItem('darkMode');
-    return saved ? JSON.parse(saved) : false;
-  });
   const [brandOptions, setBrandOptions] = useState<string[]>(() => {
     const saved = localStorage.getItem('brandOptions');
     return saved ? JSON.parse(saved) : ['Apple', 'Dell', 'HP', 'Lenovo', 'Microsoft', 'Herman Miller'];
   });
-  const [statusOptions, setStatusOptions] = useState<string[]>(() => {
-    const saved = localStorage.getItem('statusOptions');
-    return saved ? JSON.parse(saved) : ['Active', 'Maintenance', 'Retired', 'In Storage', 'On Loan'];
+  const [assetTypeOptions, setAssetTypeOptions] = useState<string[]>(() => {
+    const saved = localStorage.getItem('assetTypeOptions');
+    return saved ? JSON.parse(saved) : ['Laptop', 'Desktop', 'Monitor', 'Chair', 'Desk', 'Keyboard', 'Mouse', 'Headset', 'USB Cable', 'HDMI Cable', 'Adapter', 'Webcam', 'Microphone', 'Docking Station'];
   });
+  // Derive user options from registered users (get from localStorage)
+  const userOptions = useMemo(() => {
+    const saved = localStorage.getItem('users');
+    if (saved) {
+      const users = JSON.parse(saved);
+      return ['N/A', ...users.map((user: User) => user.name)];
+    }
+    return ['N/A', 'Admin User', 'IT Staff'];
+  }, []);
+  
+  // Dashboard state
+  const [activeDashboard, setActiveDashboard] = useState<'equipments' | 'accessories'>('equipments');
+  
+  // Accessories state
+  const [accessories, setAccessories] = useState<Accessory[]>(() => {
+    const saved = localStorage.getItem('accessories');
+    if (saved) {
+      return JSON.parse(saved);
+    }
+    // Default sample accessories
+    return [
+      {
+        id: 'acc-1',
+        index: 0,
+        assetType: 'Mouse',
+        modelNumber: 'MX Master 3',
+        brandMake: 'Logitech',
+        barcode: 'ACC-MOUSE-001',
+        serialNumber: 'MXM3-12345',
+        quantity: 15,
+        status: 'On-Stock',
+        location: 'Storage Room A',
+        auditLog: [{
+          id: 'audit-1',
+          timestamp: new Date().toISOString(),
+          user: 'Admin User',
+          action: 'created',
+          description: 'created accessory',
+        }],
+        dateCreated: new Date().toISOString(),
+        lastUpdated: new Date().toISOString(),
+      },
+      {
+        id: 'acc-2',
+        index: 1,
+        assetType: 'Headset',
+        modelNumber: 'Cloud II',
+        brandMake: 'HyperX',
+        barcode: 'ACC-HEADSET-001',
+        serialNumber: 'CLD2-67890',
+        quantity: 12,
+        status: 'On-Stock',
+        location: 'Storage Room A',
+        auditLog: [{
+          id: 'audit-2',
+          timestamp: new Date().toISOString(),
+          user: 'Admin User',
+          action: 'created',
+          description: 'created accessory',
+        }],
+        dateCreated: new Date().toISOString(),
+        lastUpdated: new Date().toISOString(),
+      },
+      {
+        id: 'acc-3',
+        index: 2,
+        assetType: 'HDMI Cable',
+        modelNumber: 'N/A',
+        brandMake: 'N/A',
+        barcode: 'ACC-HDMI-001',
+        serialNumber: 'N/A',
+        quantity: 25,
+        status: 'On-Stock',
+        location: 'Storage Room B',
+        auditLog: [{
+          id: 'audit-3',
+          timestamp: new Date().toISOString(),
+          user: 'Admin User',
+          action: 'created',
+          description: 'created accessory',
+        }],
+        dateCreated: new Date().toISOString(),
+        lastUpdated: new Date().toISOString(),
+      },
+      {
+        id: 'acc-4',
+        index: 3,
+        assetType: 'Keyboard',
+        modelNumber: 'K380',
+        brandMake: 'Logitech',
+        barcode: 'ACC-KEYB-001',
+        serialNumber: 'K380-11223',
+        quantity: 10,
+        status: 'On-Stock',
+        location: 'Storage Room A',
+        auditLog: [{
+          id: 'audit-4',
+          timestamp: new Date().toISOString(),
+          user: 'Admin User',
+          action: 'created',
+          description: 'created accessory',
+        }],
+        dateCreated: new Date().toISOString(),
+        lastUpdated: new Date().toISOString(),
+      },
+      {
+        id: 'acc-5',
+        index: 4,
+        assetType: 'USB Cable',
+        modelNumber: 'USB-C 3.1',
+        brandMake: 'N/A',
+        barcode: 'ACC-USB-001',
+        serialNumber: 'N/A',
+        quantity: 50,
+        status: 'On-Stock',
+        location: 'Storage Room B',
+        auditLog: [{
+          id: 'audit-5',
+          timestamp: new Date().toISOString(),
+          user: 'Admin User',
+          action: 'created',
+          description: 'created accessory',
+        }],
+        dateCreated: new Date().toISOString(),
+        lastUpdated: new Date().toISOString(),
+      },
+      {
+        id: 'acc-6',
+        index: 5,
+        assetType: 'Webcam',
+        modelNumber: 'C920',
+        brandMake: 'Logitech',
+        barcode: 'ACC-WEBCAM-001',
+        serialNumber: 'C920-44556',
+        quantity: 8,
+        status: 'On-Stock',
+        location: 'Storage Room A',
+        auditLog: [{
+          id: 'audit-6',
+          timestamp: new Date().toISOString(),
+          user: 'Admin User',
+          action: 'created',
+          description: 'created accessory',
+        }],
+        dateCreated: new Date().toISOString(),
+        lastUpdated: new Date().toISOString(),
+      },
+      {
+        id: 'acc-7',
+        index: 6,
+        assetType: 'Monitor Stand',
+        modelNumber: 'MS-2024',
+        brandMake: 'Dell',
+        barcode: 'ACC-STAND-001',
+        serialNumber: 'MS-77889',
+        quantity: 20,
+        status: 'On-Stock',
+        location: 'Storage Room C',
+        auditLog: [{
+          id: 'audit-7',
+          timestamp: new Date().toISOString(),
+          user: 'Admin User',
+          action: 'created',
+          description: 'created accessory',
+        }],
+        dateCreated: new Date().toISOString(),
+        lastUpdated: new Date().toISOString(),
+      },
+      {
+        id: 'acc-8',
+        index: 7,
+        assetType: 'Laptop Charger',
+        modelNumber: '65W USB-C',
+        brandMake: 'Dell',
+        barcode: 'ACC-CHARGER-001',
+        serialNumber: 'N/A',
+        quantity: 18,
+        status: 'On-Stock',
+        location: 'Storage Room A',
+        auditLog: [{
+          id: 'audit-8',
+          timestamp: new Date().toISOString(),
+          user: 'Admin User',
+          action: 'created',
+          description: 'created accessory',
+        }],
+        dateCreated: new Date().toISOString(),
+        lastUpdated: new Date().toISOString(),
+      },
+    ];
+  });
+  const [accessoriesDialogOpen, setAccessoriesDialogOpen] = useState(false);
+  const [editingAccessory, setEditingAccessory] = useState<Accessory | undefined>(undefined);
+  const [statusSelectionOpen, setStatusSelectionOpen] = useState(false);
+  const [actionDialogOpen, setActionDialogOpen] = useState(false);
+  const [requestingAccessory, setRequestingAccessory] = useState<Accessory | null>(null);
+  const [selectedActionStatus, setSelectedActionStatus] = useState<'On-Stock' | 'Reserve' | 'Issued' | 'Maintenance' | 'Retired'>('On-Stock');
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deletingAccessory, setDeletingAccessory] = useState<Accessory | null>(null);
+  
+  // Status types are now fixed: On-Stock, Reserve, Issued
 
   // Activity Log
   const [activities, setActivities] = useState<ActivityLogEntry[]>(() => {
@@ -109,33 +382,6 @@ function AssetInventory({ onBackToLanding }: AssetInventoryProps) {
   });
   const [activityLogOpen, setActivityLogOpen] = useState(false);
   const [showMainPage, setShowMainPage] = useState(true);
-
-  // Fetch assets from backend
-  const fetchAssets = async () => {
-    setLoading(true);
-    try {
-      console.log('Fetching assets from backend...');
-      const response = await fetch('http://localhost:3000/api/assets');
-      
-      if (response.ok) {
-        const data = await response.json();
-        console.log('Assets fetched:', data.items);
-        setAssets(data.items || []);
-      } else {
-        console.error('Failed to fetch assets:', response.status);
-        setAssets([]);
-      }
-    } catch (error) {
-      console.error('Error fetching assets:', error);
-      setAssets([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchAssets();
-  }, []);
 
   const addActivity = (
     action: string,
@@ -158,6 +404,17 @@ function AssetInventory({ onBackToLanding }: AssetInventoryProps) {
     localStorage.setItem('activityLog', JSON.stringify(activities));
   }, [activities]);
   
+  // Persist accessories
+  useEffect(() => {
+    localStorage.setItem('accessories', JSON.stringify(accessories));
+  }, [accessories]);
+  
+  // Clear selection and reset page when switching dashboards
+  useEffect(() => {
+    setSelectedRows(new Set());
+    setCurrentPage(1);
+  }, [activeDashboard]);
+  
   // Column width resizing - Multi-column support
   const defaultColumnWidths: Record<string, number> = {
     index: 80,
@@ -167,13 +424,14 @@ function AssetInventory({ onBackToLanding }: AssetInventoryProps) {
     modelNumber: 150,
     serialNumber: 150,
     barcode: 150,
+    quantity: 120,
     status: 120,
     location: 150,
     userName: 150,
     createdBy: 150,
     modifiedBy: 150,
     createdAt: 180,
-    lastUpdated: 180,
+    lastUpdated: 280,
     description: 200,
     comments: 200,
   };
@@ -183,29 +441,18 @@ function AssetInventory({ onBackToLanding }: AssetInventoryProps) {
   const [resizingColumn, setResizingColumn] = useState<string | null>(null);
   const resizeRef = useRef<{ startX: number; startWidth: number; columnKey: string } | null>(null);
 
-  const assetTypes = Array.from(new Set(assets.map((asset) => asset.assetType).filter((type) => type && type.trim() !== '')));
+  const assetTypes = activeDashboard === 'equipments'
+    ? Array.from(new Set(assets.map((asset) => asset.assetType).filter((type) => type && type.trim() !== '')))
+    : Array.from(new Set(accessories.map((accessory) => accessory.assetType).filter((type) => type && type.trim() !== '')));
 
   // Persist settings to localStorage
-  useEffect(() => {
-    localStorage.setItem('darkMode', JSON.stringify(darkMode));
-  }, [darkMode]);
-
   useEffect(() => {
     localStorage.setItem('brandOptions', JSON.stringify(brandOptions));
   }, [brandOptions]);
 
   useEffect(() => {
-    localStorage.setItem('statusOptions', JSON.stringify(statusOptions));
-  }, [statusOptions]);
-
-  // Apply dark mode
-  useEffect(() => {
-    if (darkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }, [darkMode]);
+    localStorage.setItem('assetTypeOptions', JSON.stringify(assetTypeOptions));
+  }, [assetTypeOptions]);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -357,11 +604,64 @@ function AssetInventory({ onBackToLanding }: AssetInventoryProps) {
     });
   }
 
+  // Filter and sort accessories
+  let filteredAccessories = accessories.filter((accessory) => {
+    const matchesSearch = searchTerm === '' || 
+      Object.values(accessory).some((value) =>
+        String(value).toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    const matchesStatus = statusFilter === 'all' || accessory.status === statusFilter;
+    const matchesType = assetTypeFilter === 'all' || accessory.assetType === assetTypeFilter;
+    return matchesSearch && matchesStatus && matchesType;
+  });
+
+  // Apply sorting to accessories
+  if (sortColumn) {
+    filteredAccessories = [...filteredAccessories].sort((a, b) => {
+      let aValue: any;
+      let bValue: any;
+
+      if (sortColumn === 'assetType') {
+        aValue = a.assetType;
+        bValue = b.assetType;
+      } else if (sortColumn === 'serialNumber') {
+        aValue = a.serialNumber || '';
+        bValue = b.serialNumber || '';
+      } else if (sortColumn === 'quantity') {
+        aValue = a.quantity;
+        bValue = b.quantity;
+      } else if (sortColumn === 'status') {
+        aValue = a.status;
+        bValue = b.status;
+      } else if (sortColumn === 'lastUpdated') {
+        aValue = new Date(a.lastUpdated).getTime();
+        bValue = new Date(b.lastUpdated).getTime();
+      }
+
+      if (typeof aValue === 'number' && typeof bValue === 'number') {
+        return sortDirection === 'asc' ? aValue - bValue : bValue - aValue;
+      }
+
+      const aStr = String(aValue).toLowerCase();
+      const bStr = String(bValue).toLowerCase();
+
+      if (sortDirection === 'asc') {
+        return aStr < bStr ? -1 : aStr > bStr ? 1 : 0;
+      } else {
+        return bStr < aStr ? -1 : bStr > aStr ? 1 : 0;
+      }
+    });
+  }
+
   // Pagination
-  const totalPages = itemsPerPage === 'all' ? 1 : Math.ceil(filteredAssets.length / itemsPerPage);
+  const currentItems = activeDashboard === 'equipments' ? filteredAssets : filteredAccessories;
+  const totalPages = itemsPerPage === 'all' ? 1 : Math.ceil(currentItems.length / itemsPerPage);
   const paginatedAssets = itemsPerPage === 'all' 
     ? filteredAssets 
     : filteredAssets.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+  const paginatedAccessories = itemsPerPage === 'all'
+    ? filteredAccessories
+    : filteredAccessories.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   // Reset to page 1 when filters change
   const handleSearchChange = (value: string) => {
@@ -384,107 +684,110 @@ function AssetInventory({ onBackToLanding }: AssetInventoryProps) {
     setCurrentPage(1);
   };
 
-  // Handle saving assets to backend
-  const handleAddAsset = async (assetData: Omit<Asset, 'id' | 'index' | 'createdAt' | 'lastUpdated'>) => {
-    console.log('Saving asset to backend:', assetData);
-    
-    try {
-      const url = editingAsset 
-        ? `http://localhost:3000/api/assets/${editingAsset.id}`
-        : 'http://localhost:3000/api/assets';
+  const handleAddAsset = (assetData: Omit<Asset, 'id' | 'index' | 'createdAt' | 'lastUpdated'>) => {
+    if (editingAsset) {
+      // Track changes for audit log and highlighting
+      const changes: AuditEntry[] = [];
+      const changedCells = new Set<string>();
       
-      const method = editingAsset ? 'PUT' : 'POST';
-      
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...assetData,
-          assetType: assetData.assetType,
-          brandMake: assetData.brandMake,
-          modelNumber: assetData.modelNumber,
-          serialNumber: assetData.serialNumber,
-          location: assetData.location,
-          userName: assetData.userName,
-          createdBy: CURRENT_USER,
-          modifiedBy: CURRENT_USER,
-          status: assetData.status || 'Active'
-        }),
+      Object.keys(assetData).forEach((key) => {
+        const oldValue = editingAsset[key as keyof Asset];
+        const newValue = assetData[key as keyof Omit<Asset, 'id' | 'index' | 'createdAt' | 'lastUpdated'>];
+        
+        if (oldValue !== newValue && key !== 'modifiedBy' && key !== 'auditLog' && key !== 'customFields' && key !== 'attachments' && key !== 'comments') {
+          changes.push({
+            id: `${Date.now()}-${key}`,
+            timestamp: new Date().toISOString(),
+            user: CURRENT_USER,
+            action: 'updated',
+            field: key,
+            oldValue: String(oldValue),
+            newValue: String(newValue),
+            description: `updated ${key}`,
+          });
+          changedCells.add(`${editingAsset.id}-${key}`);
+        }
       });
 
-      console.log('Response status:', response.status);
+      // Update existing asset
+      setAssets(
+        assets.map((asset) =>
+          asset.id === editingAsset.id
+            ? {
+                ...asset,
+                ...assetData,
+                modifiedBy: CURRENT_USER,
+                lastUpdated: new Date().toISOString(),
+                auditLog: [...(asset.auditLog ?? []), ...changes],
+              }
+            : asset
+        )
+      );
 
-      if (response.ok) {
-        const savedAsset = await response.json();
-        console.log('Asset saved successfully:', savedAsset);
-        
-        // Refresh the asset list from backend
-        await fetchAssets();
-        
-        // Close dialog and reset editing state
-        setDialogOpen(false);
-        setEditingAsset(undefined);
-        
-        // Add activity log entry
-        addActivity(
-          editingAsset 
-            ? `updated asset "${assetData.assetType}" (${assetData.serialNumber})`
-            : `created new asset "${assetData.assetType}" (${assetData.serialNumber})`,
-          editingAsset ? 'update' : 'create',
-          `Type: ${assetData.assetType}, Brand: ${assetData.brandMake}, Model: ${assetData.modelNumber}`
-        );
+      // Highlight changed cells
+      setUpdatedCells(new Set([...updatedCells, ...changedCells]));
+      setTimeout(() => {
+        setUpdatedCells(new Set());
+      }, 3000);
 
-        toast.success(editingAsset ? 'Asset updated successfully!' : 'Asset added successfully!');
-      } else {
-        const errorText = await response.text();
-        console.error('Failed to save asset:', errorText);
-        toast.error('Failed to save asset: ' + errorText);
-      }
-    } catch (error) {
-      console.error('Error saving asset:', error);
-      toast.error('Error saving asset: ' + error);
+      // Add activity log entry
+      addActivity(
+        `updated asset "${assetData.assetType}" (${assetData.serialNumber})`,
+        'update',
+        changes.map(c => `${c.field}: "${c.oldValue}" → "${c.newValue}"`).join(', ')
+      );
+
+      toast.success('Asset updated successfully!');
+    } else {
+      // Add new asset with initial audit log entry
+      const initialAudit: AuditEntry = {
+        id: `${Date.now()}-created`,
+        timestamp: new Date().toISOString(),
+        user: CURRENT_USER,
+        action: 'created',
+        description: 'created asset',
+      };
+
+      const newAsset: Asset = {
+        ...assetData,
+        id: Date.now().toString(),
+        index: assets.length,
+        createdAt: new Date().toISOString(),
+        lastUpdated: new Date().toISOString(),
+        auditLog: [initialAudit],
+      };
+      setAssets([...assets, newAsset]);
+
+      // Add activity log entry
+      addActivity(
+        `created new asset "${assetData.assetType}" (${assetData.serialNumber})`,
+        'create',
+        `Type: ${assetData.assetType}, Brand: ${assetData.brandMake}, Model: ${assetData.modelNumber}`
+      );
+
+      toast.success('Asset added successfully!');
     }
   };
 
-  // Handle deleting asset from backend
-  const handleDeleteAsset = async (id: string) => {
-    try {
-      console.log('Deleting asset:', id);
-      const response = await fetch(`http://localhost:3000/api/assets/${id}`, {
-        method: 'DELETE',
-      });
+  const handleDeleteAsset = (id: string) => {
+    const asset = assets.find(a => a.id === id);
+    setAssets(assets.filter((asset) => asset.id !== id));
+    setSelectedRows((prev) => {
+      const newSet = new Set(prev);
+      newSet.delete(id);
+      return newSet;
+    });
 
-      if (response.ok) {
-        console.log('Asset deleted successfully');
-        // Refresh the asset list from backend
-        await fetchAssets();
-        setSelectedRows((prev) => {
-          const newSet = new Set(prev);
-          newSet.delete(id);
-          return newSet;
-        });
-
-        // Add activity log entry
-        const deletedAsset = assets.find(a => a.id === id);
-        if (deletedAsset) {
-          addActivity(
-            `deleted asset "${deletedAsset.assetType}" (${deletedAsset.serialNumber})`,
-            'delete',
-            `Type: ${deletedAsset.assetType}, Brand: ${deletedAsset.brandMake}, Model: ${deletedAsset.modelNumber}`
-          );
-        }
-
-        toast.success('Asset deleted successfully!');
-      } else {
-        console.error('Failed to delete asset');
-        toast.error('Failed to delete asset');
-      }
-    } catch (error) {
-      console.error('Error deleting asset:', error);
-      toast.error('Error deleting asset');
+    // Add activity log entry
+    if (asset) {
+      addActivity(
+        `deleted asset "${asset.assetType}" (${asset.serialNumber})`,
+        'delete',
+        `Type: ${asset.assetType}, Brand: ${asset.brandMake}, Model: ${asset.modelNumber}`
+      );
     }
+
+    toast.success('Asset deleted successfully!');
   };
 
   const closeDialog = () => {
@@ -495,6 +798,304 @@ function AssetInventory({ onBackToLanding }: AssetInventoryProps) {
   const handleRowDoubleClick = (asset: Asset) => {
     setEditingAsset(asset);
     setDialogOpen(true);
+  };
+
+  // Accessories handlers
+  const handleAddAccessory = (accessoryData: Omit<Accessory, 'id' | 'index' | 'auditLog' | 'dateCreated' | 'lastUpdated'>) => {
+    if (editingAccessory) {
+      // Track changes for audit log
+      const changes: AuditEntry[] = [];
+      
+      Object.keys(accessoryData).forEach((key) => {
+        const oldValue = editingAccessory[key as keyof Accessory];
+        const newValue = accessoryData[key as keyof Omit<Accessory, 'id' | 'index' | 'auditLog' | 'dateCreated' | 'lastUpdated'>];
+        
+        if (oldValue !== newValue && key !== 'auditLog' && key !== 'attachments') {
+          changes.push({
+            id: `${Date.now()}-${key}`,
+            timestamp: new Date().toISOString(),
+            user: CURRENT_USER,
+            action: 'updated',
+            field: key,
+            oldValue: String(oldValue),
+            newValue: String(newValue),
+            description: `updated ${key}`,
+          });
+        }
+      });
+
+      // Update existing accessory
+      setAccessories(
+        accessories.map((accessory) =>
+          accessory.id === editingAccessory.id
+            ? {
+                ...accessory,
+                ...accessoryData,
+                lastUpdated: new Date().toISOString(),
+                auditLog: [...accessory.auditLog, ...changes],
+              }
+            : accessory
+        )
+      );
+
+      // Add activity log entry
+      addActivity(
+        `updated accessory \"${accessoryData.assetType}\" (${accessoryData.barcode})`,
+        'update',
+        changes.map(c => `${c.field}: \"${c.oldValue}\" → \"${c.newValue}\"`).join(', ')
+      );
+
+      toast.success('Accessory updated successfully!');
+    } else {
+      // Add new accessory with initial audit log entry
+      const initialAudit: AuditEntry = {
+        id: `${Date.now()}-created`,
+        timestamp: new Date().toISOString(),
+        user: CURRENT_USER,
+        action: 'created',
+        description: 'created accessory',
+      };
+
+      const newAccessory: Accessory = {
+        ...accessoryData,
+        id: Date.now().toString(),
+        index: accessories.length,
+        dateCreated: new Date().toISOString(),
+        lastUpdated: new Date().toISOString(),
+        auditLog: [initialAudit],
+      };
+      setAccessories([...accessories, newAccessory]);
+
+      // Add activity log entry
+      addActivity(
+        `created new accessory \"${accessoryData.assetType}\" (${accessoryData.barcode})`,
+        'create',
+        `Type: ${accessoryData.assetType}, Quantity: ${accessoryData.quantity}`
+      );
+
+      toast.success('Accessory added successfully!');
+    }
+    setAccessoriesDialogOpen(false);
+    setEditingAccessory(undefined);
+  };
+
+  const closeAccessoriesDialog = () => {
+    setAccessoriesDialogOpen(false);
+    setEditingAccessory(undefined);
+  };
+
+  const handleAccessoryRowDoubleClick = (accessory: Accessory) => {
+    setEditingAccessory(accessory);
+    setAccessoriesDialogOpen(true);
+  };
+
+  const handleRequestAccessory = (accessory: Accessory) => {
+    setRequestingAccessory(accessory);
+    setStatusSelectionOpen(true);
+  };
+
+  const handleStatusSelection = (status: 'On-Stock' | 'Reserve' | 'Issued' | 'Maintenance' | 'Retired') => {
+    setSelectedActionStatus(status);
+    setStatusSelectionOpen(false);
+    setActionDialogOpen(true);
+  };
+
+  const handleSubmitRequest = (data: { borrowerName: string; quantity: number; status: string }) => {
+    if (!requestingAccessory) return;
+
+    const requestedQuantity = data.quantity;
+    const originalAccessory = requestingAccessory;
+    const selectedStatus = data.status;
+
+    const updatedAccessories = accessories.map((acc) =>
+      acc.id === originalAccessory.id
+        ? {
+            ...acc,
+            quantity: acc.quantity - requestedQuantity,
+            lastUpdated: new Date().toISOString(),
+            auditLog: [
+              ...(acc.auditLog ?? []),
+              {
+                id: `${Date.now()}-action`,
+                timestamp: new Date().toISOString(),
+                user: CURRENT_USER,
+                action: 'updated',
+                description: `changed to ${selectedStatus} - ${requestedQuantity} item(s) ${data.borrowerName !== 'N/A' ? `for ${data.borrowerName}` : ''}`,
+              },
+            ],
+          }
+        : acc
+    );
+
+    const statusSuffix = selectedStatus.toUpperCase().replace(/[^A-Z]/g, '');
+    const newAccessory: Accessory = {
+      id: `${Date.now()}`,
+      index: accessories.length,
+      assetType: originalAccessory.assetType,
+      modelNumber: originalAccessory.modelNumber,
+      brandMake: originalAccessory.brandMake,
+      barcode: `${originalAccessory.barcode}-${statusSuffix}-${Date.now()}`,
+      serialNumber: originalAccessory.serialNumber,
+      quantity: requestedQuantity,
+      status: selectedStatus as Accessory['status'],
+      userName: data.borrowerName,
+      location: originalAccessory.location,
+      comments: `${selectedStatus} from ${originalAccessory.barcode}`,
+      originalId: originalAccessory.id,
+      auditLog: [
+        {
+          id: `${Date.now()}-created`,
+          timestamp: new Date().toISOString(),
+          user: CURRENT_USER,
+          action: 'created',
+          description: `${selectedStatus} - ${requestedQuantity} item(s) ${data.borrowerName !== 'N/A' ? `for ${data.borrowerName}` : ''}`,
+        },
+      ],
+      dateCreated: new Date().toISOString(),
+      lastUpdated: new Date().toISOString(),
+    };
+
+    setAccessories([...updatedAccessories, newAccessory]);
+
+    addActivity(
+      `changed ${requestedQuantity} x ${originalAccessory.assetType} to ${selectedStatus}`,
+      'create',
+      `Barcode: ${originalAccessory.barcode}, Remaining: ${originalAccessory.quantity - requestedQuantity}`
+    );
+
+    toast.success(`Successfully changed ${requestedQuantity} x ${originalAccessory.assetType} to ${selectedStatus}`);
+    setActionDialogOpen(false);
+    setRequestingAccessory(null);
+  };
+
+  const handleReturnAccessory = (issuedAccessory: Accessory) => {
+    if (!issuedAccessory.originalId) {
+      toast.error('Cannot return: Original accessory not found');
+      return;
+    }
+
+    const returnedQuantity = issuedAccessory.quantity;
+
+    const updatedAccessories = accessories.map((acc) =>
+      acc.id === issuedAccessory.originalId
+        ? {
+            ...acc,
+            quantity: acc.quantity + returnedQuantity,
+            lastUpdated: new Date().toISOString(),
+            auditLog: [
+              ...(acc.auditLog ?? []),
+              {
+                id: `${Date.now()}-return`,
+                timestamp: new Date().toISOString(),
+                user: CURRENT_USER,
+                action: 'updated',
+                description: `returned ${returnedQuantity} item(s) from ${issuedAccessory.userName || 'N/A'}`,
+              },
+            ],
+          }
+        : acc
+    );
+
+    const finalAccessories = updatedAccessories.filter((acc) => acc.id !== issuedAccessory.id);
+
+    setAccessories(finalAccessories);
+
+    addActivity(
+      `returned ${returnedQuantity} x ${issuedAccessory.assetType} from ${issuedAccessory.userName || 'N/A'}`,
+      'delete',
+      `Barcode: ${issuedAccessory.barcode}`
+    );
+
+    toast.success(`Successfully returned ${returnedQuantity} x ${issuedAccessory.assetType}`);
+  };
+
+  const handleIssueReserved = (reservedAccessory: Accessory) => {
+    const updatedAccessories = accessories.map((acc) =>
+      acc.id === reservedAccessory.id
+        ? {
+            ...acc,
+            status: 'Issued' as 'On-Stock' | 'Reserve' | 'Issued' | 'Maintenance' | 'Retired',
+            lastUpdated: new Date().toISOString(),
+            auditLog: [
+              ...(acc.auditLog ?? []),
+              {
+                id: `${Date.now()}-issue`,
+                timestamp: new Date().toISOString(),
+                user: CURRENT_USER,
+                action: 'updated',
+                description: `changed status from Reserved to Issued`,
+              },
+            ],
+          }
+        : acc
+    );
+
+    setAccessories(updatedAccessories);
+
+    addActivity(
+      `issued ${reservedAccessory.quantity} x ${reservedAccessory.assetType}`,
+      'update',
+      `Barcode: ${reservedAccessory.barcode}, Status changed from Reserved to Issued`
+    );
+
+    toast.success(`Successfully issued ${reservedAccessory.quantity} x ${reservedAccessory.assetType}`);
+  };
+
+  const handleDeleteClick = (accessory: Accessory) => {
+    setDeletingAccessory(accessory);
+    setAccessoriesDialogOpen(false);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = (quantityToDelete: number) => {
+    if (!deletingAccessory) return;
+
+    if (quantityToDelete >= deletingAccessory.quantity) {
+      // Delete the entire record
+      const updatedAccessories = accessories.filter((acc) => acc.id !== deletingAccessory.id);
+      setAccessories(updatedAccessories);
+
+      addActivity(
+        `deleted ${quantityToDelete} x ${deletingAccessory.assetType}`,
+        'delete',
+        `Barcode: ${deletingAccessory.barcode}, Completely removed from inventory`
+      );
+
+      toast.success(`Successfully deleted ${deletingAccessory.assetType}`);
+    } else {
+      // Reduce the quantity
+      const updatedAccessories = accessories.map((acc) =>
+        acc.id === deletingAccessory.id
+          ? {
+              ...acc,
+              quantity: acc.quantity - quantityToDelete,
+              lastUpdated: new Date().toISOString(),
+              auditLog: [
+                ...acc.auditLog,
+                {
+                  id: `${Date.now()}-delete`,
+                  timestamp: new Date().toISOString(),
+                  user: CURRENT_USER,
+                  action: 'updated',
+                  description: `deleted ${quantityToDelete} item(s) from inventory`,
+                },
+              ],
+            }
+          : acc
+      );
+
+      setAccessories(updatedAccessories);
+
+      addActivity(
+        `deleted ${quantityToDelete} x ${deletingAccessory.assetType}`,
+        'update',
+        `Barcode: ${deletingAccessory.barcode}, Remaining: ${deletingAccessory.quantity - quantityToDelete}`
+      );
+
+      toast.success(`Successfully deleted ${quantityToDelete} x ${deletingAccessory.assetType}`);
+    }
+
+    setDeletingAccessory(null);
   };
 
   const toggleRowSelection = (id: string, isCtrlClick: boolean = false) => {
@@ -543,9 +1144,11 @@ function AssetInventory({ onBackToLanding }: AssetInventoryProps) {
     setSelectedRows(new Set());
   };
 
+
+
   const getStatusColor = (status: Asset['status']) => {
     switch (status) {
-      case 'Active':
+      case 'On-Stock':
         return 'bg-green-500';
       case 'Inactive':
         return 'bg-gray-500';
@@ -553,6 +1156,10 @@ function AssetInventory({ onBackToLanding }: AssetInventoryProps) {
         return 'bg-yellow-500';
       case 'Retired':
         return 'bg-red-500';
+      case 'Reserve':
+        return 'bg-blue-500';
+      case 'Issued':
+        return 'bg-purple-500';
       default:
         return 'bg-gray-500';
     }
@@ -620,16 +1227,9 @@ function AssetInventory({ onBackToLanding }: AssetInventoryProps) {
         const baseData: any = {
           Index: asset.index,
           'Asset Type': asset.assetType,
-          'Brand/Make': asset.brandMake,
-          'Model Number': asset.modelNumber,
           'Serial Number': asset.serialNumber,
-          Status: asset.status,
           'Location/Station': asset.location,
-          'User Name': asset.userName,
-          'Created By': asset.createdBy,
-          'Modified By': asset.modifiedBy,
-          'Created at': new Date(asset.createdAt).toLocaleString(),
-          'Last Updated': new Date(asset.lastUpdated).toLocaleString(),
+          Status: asset.status,
         };
 
         if (asset.customFields) {
@@ -773,19 +1373,24 @@ function AssetInventory({ onBackToLanding }: AssetInventoryProps) {
           const importedAssets: Asset[] = jsonData.map((row: any, index: number) => ({
             id: Date.now().toString() + index,
             index: assets.length + index,
-            image: row['Image'] || '',
+            image: undefined,
             assetType: row['Asset Type'] || '',
-            brandMake: row['Brand/Make'] || '',
-            modelNumber: row['Model Number'] || '',
+            brandMake: '',
+            modelNumber: '',
             serialNumber: row['Serial Number'] || '',
-            status: (row['Status'] as Asset['status']) || 'Active',
+            barcode: '',
+            description: '',
+            status: (row['Status'] as Asset['status']) || 'On-Stock',
             location: row['Location/Station'] || '',
-            userName: row['User Name'] || '',
+            userName: '',
             createdBy: CURRENT_USER,
             modifiedBy: CURRENT_USER,
             createdAt: new Date().toISOString(),
             lastUpdated: new Date().toISOString(),
             customFields: {},
+            auditLog: [],
+            attachments: [],
+            comments: [],
           }));
 
           setAssets([...assets, ...importedAssets]);
@@ -822,19 +1427,24 @@ function AssetInventory({ onBackToLanding }: AssetInventoryProps) {
           const importedAssets: Asset[] = jsonData.map((row: any, index: number) => ({
             id: Date.now().toString() + index,
             index: assets.length + index,
-            image: row['Image'] || '',
+            image: undefined,
             assetType: row['Asset Type'] || '',
-            brandMake: row['Brand/Make'] || '',
-            modelNumber: row['Model Number'] || '',
+            brandMake: '',
+            modelNumber: '',
             serialNumber: row['Serial Number'] || '',
-            status: (row['Status'] as Asset['status']) || 'Active',
+            barcode: '',
+            description: '',
+            status: (row['Status'] as Asset['status']) || 'On-Stock',
             location: row['Location/Station'] || '',
-            userName: row['User Name'] || '',
+            userName: '',
             createdBy: CURRENT_USER,
             modifiedBy: CURRENT_USER,
             createdAt: new Date().toISOString(),
             lastUpdated: new Date().toISOString(),
             customFields: {},
+            auditLog: [],
+            attachments: [],
+            comments: [],
           }));
 
           setAssets([...assets, ...importedAssets]);
@@ -870,16 +1480,9 @@ function AssetInventory({ onBackToLanding }: AssetInventoryProps) {
         const baseData: any = {
           Index: asset.index,
           'Asset Type': asset.assetType,
-          'Brand/Make': asset.brandMake,
-          'Model Number': asset.modelNumber,
           'Serial Number': asset.serialNumber,
-          Status: asset.status,
           'Location/Station': asset.location,
-          'User Name': asset.userName,
-          'Created By': asset.createdBy,
-          'Modified By': asset.modifiedBy,
-          'Created at': new Date(asset.createdAt).toLocaleString(),
-          'Last Updated': new Date(asset.lastUpdated).toLocaleString(),
+          Status: asset.status,
         };
 
         if (asset.customFields) {
@@ -949,70 +1552,136 @@ function AssetInventory({ onBackToLanding }: AssetInventoryProps) {
 
   const handleBulkDelete = () => {
     const selectedIds = Array.from(selectedRows);
-    const deletedAssets = assets.filter((asset) => selectedIds.includes(asset.id));
-    setAssets(assets.filter((asset) => !selectedIds.includes(asset.id)));
-    setSelectedRows(new Set());
+    
+    if (activeDashboard === 'equipments') {
+      const deletedAssets = assets.filter((asset) => selectedIds.includes(asset.id));
+      setAssets(assets.filter((asset) => !selectedIds.includes(asset.id)));
+      setSelectedRows(new Set());
 
-    // Add activity log entry
-    addActivity(
-      `bulk deleted ${selectedIds.length} assets`,
-      'delete',
-      `Deleted assets: ${deletedAssets.map(a => a.serialNumber).join(', ')}`
-    );
+      // Add activity log entry
+      addActivity(
+        `bulk deleted ${selectedIds.length} equipment`,
+        'delete',
+        `Deleted equipment: ${deletedAssets.map(a => a.serialNumber).join(', ')}`
+      );
 
-    toast.success(`Deleted ${selectedIds.length} assets`);
+      toast.success(`Deleted ${selectedIds.length} equipment`);
+    } else {
+      const deletedAccessories = accessories.filter((accessory) => selectedIds.includes(accessory.id));
+      setAccessories(accessories.filter((accessory) => !selectedIds.includes(accessory.id)));
+      setSelectedRows(new Set());
+
+      // Add activity log entry
+      addActivity(
+        `bulk deleted ${selectedIds.length} accessories`,
+        'delete',
+        `Deleted accessories: ${deletedAccessories.map(a => a.barcode).join(', ')}`
+      );
+
+      toast.success(`Deleted ${selectedIds.length} accessories`);
+    }
   };
 
   const handleBulkUpdateStatus = (status: string) => {
     const selectedIds = Array.from(selectedRows);
-    const updatedAssets = assets.filter((asset) => selectedIds.includes(asset.id));
-    setAssets(
-      assets.map((asset) =>
-        selectedIds.includes(asset.id)
-          ? {
-              ...asset,
-              status: status as Asset['status'],
-              modifiedBy: CURRENT_USER,
-              lastUpdated: new Date().toISOString(),
-            }
-          : asset
-      )
-    );
+    
+    if (activeDashboard === 'equipments') {
+      const updatedAssets = assets.filter((asset) => selectedIds.includes(asset.id));
+      setAssets(
+        assets.map((asset) =>
+          selectedIds.includes(asset.id)
+            ? {
+                ...asset,
+                status: status as Asset['status'],
+                modifiedBy: CURRENT_USER,
+                lastUpdated: new Date().toISOString(),
+              }
+            : asset
+        )
+      );
 
-    // Add activity log entry
-    addActivity(
-      `bulk updated status to "${status}" for ${selectedIds.length} assets`,
-      'update',
-      `Updated assets: ${updatedAssets.map(a => a.serialNumber).join(', ')}`
-    );
+      // Add activity log entry
+      addActivity(
+        `bulk updated status to "${status}" for ${selectedIds.length} equipment`,
+        'update',
+        `Updated equipment: ${updatedAssets.map(a => a.serialNumber).join(', ')}`
+      );
 
-    toast.success(`Updated status for ${selectedIds.length} assets`);
+      toast.success(`Updated status for ${selectedIds.length} equipment`);
+    } else {
+      const updatedAccessories = accessories.filter((accessory) => selectedIds.includes(accessory.id));
+      setAccessories(
+        accessories.map((accessory) =>
+          selectedIds.includes(accessory.id)
+            ? {
+                ...accessory,
+                status: status as Accessory['status'],
+                lastUpdated: new Date().toISOString(),
+              }
+            : accessory
+        )
+      );
+
+      // Add activity log entry
+      addActivity(
+        `bulk updated status to "${status}" for ${selectedIds.length} accessories`,
+        'update',
+        `Updated accessories: ${updatedAccessories.map(a => a.barcode).join(', ')}`
+      );
+
+      toast.success(`Updated status for ${selectedIds.length} accessories`);
+    }
   };
 
   const handleBulkUpdateLocation = (location: string) => {
     const selectedIds = Array.from(selectedRows);
-    const updatedAssets = assets.filter((asset) => selectedIds.includes(asset.id));
-    setAssets(
-      assets.map((asset) =>
-        selectedIds.includes(asset.id)
-          ? {
-              ...asset,
-              location,
-              modifiedBy: CURRENT_USER,
-              lastUpdated: new Date().toISOString(),
-            }
-          : asset
-      )
-    );
+    
+    if (activeDashboard === 'equipments') {
+      const updatedAssets = assets.filter((asset) => selectedIds.includes(asset.id));
+      setAssets(
+        assets.map((asset) =>
+          selectedIds.includes(asset.id)
+            ? {
+                ...asset,
+                location,
+                modifiedBy: CURRENT_USER,
+                lastUpdated: new Date().toISOString(),
+              }
+            : asset
+        )
+      );
 
-    // Add activity log entry
-    addActivity(
-      `bulk updated location to "${location}" for ${selectedIds.length} assets`,
-      'update',
-      `Updated assets: ${updatedAssets.map(a => a.serialNumber).join(', ')}`
-    );
+      // Add activity log entry
+      addActivity(
+        `bulk updated location to "${location}" for ${selectedIds.length} equipment`,
+        'update',
+        `Updated equipment: ${updatedAssets.map(a => a.serialNumber).join(', ')}`
+      );
 
-    toast.success(`Updated location for ${selectedIds.length} assets`);
+      toast.success(`Updated location for ${selectedIds.length} equipment`);
+    } else {
+      const updatedAccessories = accessories.filter((accessory) => selectedIds.includes(accessory.id));
+      setAccessories(
+        accessories.map((accessory) =>
+          selectedIds.includes(accessory.id)
+            ? {
+                ...accessory,
+                location,
+                lastUpdated: new Date().toISOString(),
+              }
+            : accessory
+        )
+      );
+
+      // Add activity log entry
+      addActivity(
+        `bulk updated location to "${location}" for ${selectedIds.length} accessories`,
+        'update',
+        `Updated accessories: ${updatedAccessories.map(a => a.barcode).join(', ')}`
+      );
+
+      toast.success(`Updated location for ${selectedIds.length} accessories`);
+    }
   };
 
   const handleDuplicateAsset = (asset: Asset) => {
@@ -1183,7 +1852,7 @@ function AssetInventory({ onBackToLanding }: AssetInventoryProps) {
   }, [resizingColumn, columnWidths]);
 
   return (
-    <div className={`min-h-screen p-6 transition-colors ${darkMode ? 'dark bg-gray-900' : 'bg-gray-50'}`}>
+    <div className="min-h-screen p-6 bg-gray-50">
       <Toaster position="top-right" />
       
       {/* Settings Tab */}
@@ -1193,15 +1862,15 @@ function AssetInventory({ onBackToLanding }: AssetInventoryProps) {
       <SettingsPanel
         open={settingsPanelOpen}
         onClose={() => setSettingsPanelOpen(false)}
-        darkMode={darkMode}
-        onDarkModeChange={setDarkMode}
         brandOptions={brandOptions}
         onBrandOptionsChange={setBrandOptions}
-        statusOptions={statusOptions}
-        onStatusOptionsChange={setStatusOptions}
+        assetTypeOptions={assetTypeOptions}
+        onAssetTypeOptionsChange={setAssetTypeOptions}
         onActivityLogOpen={() => {
-          setActivityLogOpen(true);
-          setShowMainPage(false);
+          if (onNavigateToActivityLog) {
+            onNavigateToActivityLog();
+            setSettingsPanelOpen(false);
+          }
         }}
         onGoBackToMainPage={() => {
           onBackToLanding();
@@ -1215,7 +1884,6 @@ function AssetInventory({ onBackToLanding }: AssetInventoryProps) {
           setActivityLogOpen(false);
           setShowMainPage(true);
         }}
-        darkMode={darkMode}
         activities={activities}
       />
 
@@ -1230,78 +1898,107 @@ function AssetInventory({ onBackToLanding }: AssetInventoryProps) {
                 <Package className="h-8 w-8 text-white" />
               </div>
               <div>
-                <h1 className={darkMode ? 'text-gray-100' : 'text-gray-900'}>Asset Inventory</h1>
-                <p className={darkMode ? 'text-gray-400' : 'text-gray-600'}>Manage and track your organizational assets</p>
+                <h1 className="text-gray-900">Asset Inventory</h1>
+                <div className="flex gap-2 mt-1">
+                  <DashboardDropdown
+                    activeDashboard={activeDashboard}
+                    onDashboardChange={setActiveDashboard}
+                  />
+                </div>
               </div>
             </div>
             <div className="flex items-center gap-3">
               {/* User Info */}
               {user && (
-                <div className="flex items-center gap-2 px-3 py-2 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+                <div className="flex items-center gap-2 px-3 py-2 bg-green-50 rounded-lg border border-green-200">
                   <div
                     className="flex items-center justify-center h-8 w-8 rounded-full text-white text-sm"
                     style={{ backgroundColor: LINE_GREEN }}
                   >
-                    <User className="h-4 w-4" />
+                    <UserIcon className="h-4 w-4" />
                   </div>
                   <div>
-                    <p className="text-sm text-gray-900 dark:text-gray-100">{user.username}</p>
-                    <p className="text-xs text-gray-600 dark:text-gray-400">{user.role}</p>
+                    <p className="text-sm text-gray-900">{user.username}</p>
+                    <p className="text-xs text-gray-600">{user.role}</p>
                   </div>
                 </div>
               )}
-              <ImportMenu onImportExcel={importExcel} onImportCSV={importCSV} />
-              <ExportMenu 
-                onExportImage={exportAsImage} 
-                onExportPDF={exportAsPDF} 
+              <ImportExportBackupMenu
+                onImportExcel={importExcel}
+                onImportCSV={importCSV}
+                onExportImage={exportAsImage}
+                onExportPDF={exportAsPDF}
                 onExportExcel={exportAsExcel}
                 onExportSelectedExcel={exportSelectedExcel}
                 onPrint={handlePrint}
+                onCreateBackup={createBackup}
+                onRestoreBackup={restoreBackup}
                 hasSelection={selectedRows.size > 0}
               />
-              <BackupMenu onCreateBackup={createBackup} onRestoreBackup={restoreBackup} />
-              <Button onClick={() => setDialogOpen(true)} style={{ backgroundColor: LINE_GREEN }} className="text-white hover:opacity-90">
+              <ColumnOptionsMenu
+                brandOptions={brandOptions}
+                onBrandOptionsChange={setBrandOptions}
+                assetTypeOptions={assetTypeOptions}
+                onAssetTypeOptionsChange={setAssetTypeOptions}
+              />
+              <Button 
+                onClick={() => activeDashboard === 'equipments' ? setDialogOpen(true) : setAccessoriesDialogOpen(true)} 
+                style={{ backgroundColor: LINE_GREEN }} 
+                className="text-white hover:opacity-90"
+              >
                 <Plus className="h-4 w-4 mr-2" />
-                Add Asset
+                {activeDashboard === 'equipments' ? 'Add Equipment' : 'Add Accessory'}
               </Button>
             </div>
           </div>
 
           {/* Summary Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <Card className={darkMode ? 'bg-gray-800 border-gray-700' : ''}>
+            <Card>
               <CardHeader className="pb-2">
-                <CardTitle className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Total Assets</CardTitle>
+                <CardTitle className="text-sm text-gray-600">
+                  {activeDashboard === 'equipments' ? 'Total Equipment' : 'Total Accessories'}
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl" style={{ color: LINE_GREEN }}>
-                  {filteredAssets.length}
+                  {activeDashboard === 'equipments' ? filteredAssets.length : filteredAccessories.length}
                 </div>
               </CardContent>
             </Card>
-            <Card className={darkMode ? 'bg-gray-800 border-gray-700' : ''}>
+            <Card>
               <CardHeader className="pb-2">
-                <CardTitle className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Active</CardTitle>
+                <CardTitle className="text-sm text-gray-600">On-Stock</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl text-green-600">{filteredAssets.filter((a) => a.status === 'Active').length}</div>
+                <div className="text-2xl text-green-600">
+                  {activeDashboard === 'equipments' 
+                    ? filteredAssets.filter((a) => a.status === 'On-Stock').length
+                    : filteredAccessories.filter((a) => a.status === 'On-Stock').length}
+                </div>
               </CardContent>
             </Card>
-            <Card className={darkMode ? 'bg-gray-800 border-gray-700' : ''}>
+            <Card>
               <CardHeader className="pb-2">
-                <CardTitle className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Maintenance</CardTitle>
+                <CardTitle className="text-sm text-gray-600">Reserve</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl text-yellow-600">{filteredAssets.filter((a) => a.status === 'Maintenance').length}</div>
+                <div className="text-2xl text-blue-600">
+                  {activeDashboard === 'equipments'
+                    ? filteredAssets.filter((a) => a.status === 'Reserve').length
+                    : filteredAccessories.filter((a) => a.status === 'Reserve').length}
+                </div>
               </CardContent>
             </Card>
-            <Card className={darkMode ? 'bg-gray-800 border-gray-700' : ''}>
+            <Card>
               <CardHeader className="pb-2">
-                <CardTitle className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Asset Types</CardTitle>
+                <CardTitle className="text-sm text-gray-600">Issued</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl" style={{ color: LINE_GREEN }}>
-                  {assetTypes.length}
+                <div className="text-2xl text-purple-600">
+                  {activeDashboard === 'equipments'
+                    ? filteredAssets.filter((a) => a.status === 'Issued').length
+                    : filteredAccessories.filter((a) => a.status === 'Issued').length}
                 </div>
               </CardContent>
             </Card>
@@ -1323,7 +2020,7 @@ function AssetInventory({ onBackToLanding }: AssetInventoryProps) {
           <div
             className="flex items-center justify-between px-4 rounded-lg border min-h-[52px]"
             style={{ 
-              backgroundColor: darkMode ? '#1a4d2e' : '#f0fdf4', 
+              backgroundColor: '#f0fdf4', 
               borderColor: LINE_GREEN 
             }}
           >
@@ -1347,14 +2044,14 @@ function AssetInventory({ onBackToLanding }: AssetInventoryProps) {
                   variant="ghost"
                   size="sm"
                   onClick={clearSelection}
-                  className={darkMode ? 'hover:bg-gray-700' : 'hover:bg-green-100'}
+                  className="hover:bg-green-100"
                 >
                   <X className="h-4 w-4 mr-1" />
                   Clear Selection
                 </Button>
               </>
             ) : (
-              <div className={`text-sm py-3 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+              <div className="text-sm py-3 text-gray-500">
                 Select a row
               </div>
             )}
@@ -1363,75 +2060,32 @@ function AssetInventory({ onBackToLanding }: AssetInventoryProps) {
 
         {/* Table */}
         <div ref={tableRef}>
-          <Card className={darkMode ? 'bg-gray-800 border-gray-700' : ''}>
+          <Card>
             <CardContent className="p-0">
               <div className="overflow-x-scroll" style={{ maxWidth: '100%' }}>
+              {activeDashboard === 'equipments' ? (
               <Table style={{ width: 'max-content', minWidth: '100%' }}>
                 <TableHeader>
-                  <TableRow style={{ backgroundColor: darkMode ? '#1a4d2e' : '#f0fdf4' }}>
-                    <TableHead className="w-12 relative" style={{ backgroundColor: darkMode ? '#1a4d2e' : '#f0fdf4' }}>
+                  <TableRow style={{ backgroundColor: '#f0fdf4' }}>
+                    <TableHead className="w-12 relative" style={{ backgroundColor: '#f0fdf4' }}>
                       <button
                         onClick={handleGlobalLockToggle}
-                        className={`p-1.5 rounded transition-colors ${darkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-200'}`}
+                        className="p-1.5 rounded transition-colors hover:bg-gray-200"
                         title={globalResizeLock ? 'Unlock all columns to resize' : 'Lock all columns'}
                       >
                         {globalResizeLock ? (
-                          <Lock className={`h-4 w-4 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`} />
+                          <Lock className="h-4 w-4 text-gray-600" />
                         ) : (
                           <Unlock className="h-4 w-4" style={{ color: LINE_GREEN }} />
                         )}
                       </button>
                     </TableHead>
                     <TableHead className="w-12"></TableHead>
-                    {renderResizableHeader('index', 'Index', 'index')}
-                    {renderResizableHeader('image', 'Image')}
                     {renderResizableHeader('assetType', 'Asset Type', 'assetType')}
-                    {renderResizableHeader('brandMake', 'Brand/Make', 'brandMake')}
-                    {renderResizableHeader('modelNumber', 'Model Number', 'modelNumber')}
                     {renderResizableHeader('serialNumber', 'Serial Number', 'serialNumber')}
-                    {renderResizableHeader('barcode', 'Barcode', 'barcode')}
-                    {renderResizableHeader('status', 'Status', 'status')}
                     {renderResizableHeader('location', 'Location/Station', 'location')}
-                    {renderResizableHeader('userName', 'User Name', 'userName')}
-                    {renderResizableHeader('createdBy', 'Created By', 'createdBy')}
-                    {renderResizableHeader('modifiedBy', 'Modified By', 'modifiedBy')}
-                    {renderResizableHeader('createdAt', 'Created at', 'createdAt')}
+                    {renderResizableHeader('status', 'Status', 'status')}
                     {renderResizableHeader('lastUpdated', 'Last Updated', 'lastUpdated')}
-                    <TableHead 
-                      className="relative hover:bg-green-100" 
-                      style={{ 
-                        width: `${columnWidths.comments || 200}px`, 
-                        minWidth: `${columnWidths.comments || 200}px`,
-                        maxWidth: `${columnWidths.comments || 200}px`
-                      }}
-                    >
-                      <div className="flex items-center gap-1">
-                        <MessageSquare className="h-4 w-4" />
-                        <span>Comments</span>
-                      </div>
-                      {!globalResizeLock && (
-                        <>
-                          <div
-                            className="absolute -right-2 top-0 bottom-0 w-6 cursor-col-resize z-10"
-                            onMouseDown={(e) => handleMouseDown(e, 'comments')}
-                            style={{ userSelect: 'none' }}
-                            title="Drag to resize"
-                          />
-                          <div
-                            className="absolute right-0 top-0 bottom-0 w-1 pointer-events-none transition-all z-10"
-                            style={{ 
-                              backgroundColor: resizingColumn === 'comments' ? '#16a34a' : '#4ade80',
-                              boxShadow: resizingColumn === 'comments' ? '0 0 4px rgba(22, 163, 74, 0.5)' : 'none'
-                            }}
-                          />
-                        </>
-                      )}
-                      {resizingColumn === 'comments' && (
-                        <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded shadow-lg whitespace-nowrap z-20">
-                          {columnWidths.comments || 200}px
-                        </div>
-                      )}
-                    </TableHead>
                     {customColumns.map((column) => {
                       const columnKey = `custom_${column}`;
                       const width = columnWidths[columnKey] || 150;
@@ -1481,33 +2135,13 @@ function AssetInventory({ onBackToLanding }: AssetInventoryProps) {
                         </TableHead>
                       );
                     })}
-                    <TableHead>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setAddColumnDialogOpen(true)}
-                        style={{ color: LINE_GREEN }}
-                      >
-                        <Plus className="h-4 w-4 mr-1" />
-                        Add Column
-                      </Button>
-                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {loading ? (
+                  {filteredAssets.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={17 + customColumns.length} className="text-center py-12">
-                        <div className="flex items-center justify-center">
-                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
-                          <span className="ml-2">Loading assets...</span>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ) : filteredAssets.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={17 + customColumns.length} className={`text-center py-12 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                        {assets.length === 0 ? 'No assets found. Add your first asset to get started!' : 'No assets match your filters.'}
+                      <TableCell colSpan={7 + customColumns.length} className="text-center py-12 text-gray-500">
+                        No assets found. Add your first asset to get started!
                       </TableCell>
                     </TableRow>
                   ) : (
@@ -1518,18 +2152,14 @@ function AssetInventory({ onBackToLanding }: AssetInventoryProps) {
                       const getCellHighlight = (fieldName: string) => {
                         const isUpdated = updatedCells.has(`${asset.id}-${fieldName}`) && !isSelected && !isHovered;
                         return isUpdated 
-                          ? (darkMode ? 'border-2 border-yellow-500 rounded px-1 bg-yellow-900/30' : 'border-2 border-yellow-400 rounded px-1 bg-yellow-50')
+                          ? 'border-2 border-yellow-400 rounded px-1 bg-yellow-50'
                           : '';
                       };
 
                       return (
                         <TableRow
                           key={asset.id}
-                          className={`transition-colors ${
-                            darkMode 
-                              ? `hover:bg-gray-700 ${isSelected ? 'bg-blue-900/50' : ''}` 
-                              : `hover:bg-gray-50 ${isSelected ? 'bg-blue-50' : ''}`
-                          }`}
+                          className={`transition-colors hover:bg-gray-50 ${isSelected ? 'bg-blue-50' : ''}`}
                           onDoubleClick={() => handleRowDoubleClick(asset)}
                           onClick={(e) => handleRowClick(asset.id, e)}
                           onMouseEnter={() => setHoveredRow(asset.id)}
@@ -1549,34 +2179,6 @@ function AssetInventory({ onBackToLanding }: AssetInventoryProps) {
                             </div>
                           </TableCell>
 
-                          {/* Index - Fixed, not editable */}
-                          <TableCell style={{ 
-                            width: `${columnWidths.index || 80}px`, 
-                            minWidth: `${columnWidths.index || 80}px`,
-                            maxWidth: `${columnWidths.index || 80}px`
-                          }}>
-                            <div className="text-center">{asset.index}</div>
-                          </TableCell>
-
-                          {/* Image */}
-                          <TableCell style={{ 
-                            width: `${columnWidths.image || 100}px`, 
-                            minWidth: `${columnWidths.image || 100}px`,
-                            maxWidth: `${columnWidths.image || 100}px`
-                          }}>
-                            {asset.image ? (
-                              <ImageWithFallback
-                                src={asset.image}
-                                alt={asset.assetType}
-                                className="w-16 h-16 object-cover rounded"
-                              />
-                            ) : (
-                              <div className="w-16 h-16 bg-gray-200 rounded flex items-center justify-center">
-                                <Package className="h-6 w-6 text-gray-400" />
-                              </div>
-                            )}
-                          </TableCell>
-
                           {/* Asset Type */}
                           <TableCell style={{ width: `${columnWidths.assetType || 150}px`, minWidth: `${columnWidths.assetType || 150}px`, maxWidth: `${columnWidths.assetType || 150}px` }}>
                             <div className={getCellHighlight('assetType')}>
@@ -1584,31 +2186,17 @@ function AssetInventory({ onBackToLanding }: AssetInventoryProps) {
                             </div>
                           </TableCell>
 
-                          {/* Brand/Make */}
-                          <TableCell style={{ width: `${columnWidths.brandMake || 150}px`, minWidth: `${columnWidths.brandMake || 150}px`, maxWidth: `${columnWidths.brandMake || 150}px` }}>
-                            <div className={getCellHighlight('brandMake')}>
-                              {asset.brandMake}
-                            </div>
-                          </TableCell>
-
-                          {/* Model Number */}
-                          <TableCell style={{ width: `${columnWidths.modelNumber || 150}px`, minWidth: `${columnWidths.modelNumber || 150}px`, maxWidth: `${columnWidths.modelNumber || 150}px` }}>
-                            <div className={getCellHighlight('modelNumber')}>
-                              {asset.modelNumber}
-                            </div>
-                          </TableCell>
-
                           {/* Serial Number */}
-                          <TableCell style={{ width: `${columnWidths.serialNumber || 150}px`, minWidth: `${columnWidths.serialNumber || 150}px`, maxWidth: `${columnWidths.serialNumber || 150}px` }}>
+                          <TableCell style={{ width: `${columnWidths.serialNumber || 200}px`, minWidth: `${columnWidths.serialNumber || 200}px`, maxWidth: `${columnWidths.serialNumber || 200}px` }}>
                             <div className={getCellHighlight('serialNumber')}>
                               {asset.serialNumber}
                             </div>
                           </TableCell>
 
-                          {/* Barcode */}
-                          <TableCell style={{ width: `${columnWidths.barcode || 150}px`, minWidth: `${columnWidths.barcode || 150}px`, maxWidth: `${columnWidths.barcode || 150}px` }}>
-                            <div className={`${darkMode ? 'text-gray-400' : 'text-gray-500'} text-sm ${getCellHighlight('barcode')}`}>
-                              {asset.barcode || '-'}
+                          {/* Location/Station */}
+                          <TableCell style={{ width: `${columnWidths.location || 200}px`, minWidth: `${columnWidths.location || 200}px`, maxWidth: `${columnWidths.location || 200}px` }}>
+                            <div className={getCellHighlight('location')}>
+                              {asset.location}
                             </div>
                           </TableCell>
 
@@ -1619,42 +2207,9 @@ function AssetInventory({ onBackToLanding }: AssetInventoryProps) {
                             </div>
                           </TableCell>
 
-                          {/* Location/Station */}
-                          <TableCell style={{ width: `${columnWidths.location || 150}px`, minWidth: `${columnWidths.location || 150}px`, maxWidth: `${columnWidths.location || 150}px` }}>
-                            <div className={getCellHighlight('location')}>
-                              {asset.location}
-                            </div>
-                          </TableCell>
-
-                          {/* User Name */}
-                          <TableCell style={{ width: `${columnWidths.userName || 150}px`, minWidth: `${columnWidths.userName || 150}px`, maxWidth: `${columnWidths.userName || 150}px` }}>
-                            <div className={getCellHighlight('userName')}>
-                              {asset.userName}
-                            </div>
-                          </TableCell>
-
-                          {/* Created By */}
-                          <TableCell style={{ width: `${columnWidths.createdBy || 150}px`, minWidth: `${columnWidths.createdBy || 150}px`, maxWidth: `${columnWidths.createdBy || 150}px` }}>{asset.createdBy}</TableCell>
-
-                          {/* Modified By */}
-                          <TableCell style={{ width: `${columnWidths.modifiedBy || 150}px`, minWidth: `${columnWidths.modifiedBy || 150}px`, maxWidth: `${columnWidths.modifiedBy || 150}px` }}>{asset.modifiedBy}</TableCell>
-
-                          {/* Created at */}
-                          <TableCell style={{ width: `${columnWidths.createdAt || 180}px`, minWidth: `${columnWidths.createdAt || 180}px`, maxWidth: `${columnWidths.createdAt || 180}px` }}>
-                            <div className="text-sm text-gray-600">{new Date(asset.createdAt).toLocaleString()}</div>
-                          </TableCell>
-
                           {/* Last Updated */}
                           <TableCell style={{ width: `${columnWidths.lastUpdated || 180}px`, minWidth: `${columnWidths.lastUpdated || 180}px`, maxWidth: `${columnWidths.lastUpdated || 180}px` }}>
                             <div className="text-sm text-gray-600">{new Date(asset.lastUpdated).toLocaleString()}</div>
-                          </TableCell>
-
-                          {/* Comments */}
-                          <TableCell style={{ width: `${columnWidths.comments || 200}px`, minWidth: `${columnWidths.comments || 200}px`, maxWidth: `${columnWidths.comments || 200}px` }}>
-                            <div className="flex items-center gap-1 text-sm text-gray-600">
-                              <MessageSquare className="h-4 w-4" />
-                              <span>{asset.comments?.length || 0}</span>
-                            </div>
                           </TableCell>
 
                           {/* Custom Columns */}
@@ -1672,15 +2227,32 @@ function AssetInventory({ onBackToLanding }: AssetInventoryProps) {
                               </TableCell>
                             );
                           })}
-
-                          {/* Empty cell for Add Column button alignment */}
-                          <TableCell></TableCell>
                         </TableRow>
                       );
                     })
                   )}
                 </TableBody>
               </Table>
+              ) : (
+                <AccessoriesTable
+                  accessories={paginatedAccessories}
+                  selectedRows={selectedRows}
+                  hoveredRow={hoveredRow}
+                  setHoveredRow={setHoveredRow}
+                  handleCheckboxChange={handleCheckboxChange}
+                  handleRowClick={handleRowClick}
+                  handleRowDoubleClick={handleAccessoryRowDoubleClick}
+                  sortColumn={sortColumn}
+                  sortDirection={sortDirection}
+                  handleSort={handleSort}
+                  globalResizeLock={globalResizeLock}
+                  handleGlobalLockToggle={handleGlobalLockToggle}
+                  columnWidths={columnWidths}
+                  onRequestAccessory={handleRequestAccessory}
+                  onReturnAccessory={handleReturnAccessory}
+                  onIssueReserved={handleIssueReserved}
+                />
+              )}
             </div>
           </CardContent>
         </Card>
@@ -1689,7 +2261,11 @@ function AssetInventory({ onBackToLanding }: AssetInventoryProps) {
         {/* Footer with Pagination */}
         <div className="mt-4 flex items-center justify-between">
           <div className="text-sm text-gray-500">
-            Showing {filteredAssets.length === 0 ? 0 : (currentPage - 1) * (itemsPerPage === 'all' ? filteredAssets.length : itemsPerPage) + 1} to {Math.min(currentPage * (itemsPerPage === 'all' ? filteredAssets.length : itemsPerPage), filteredAssets.length)} of {filteredAssets.length} assets
+            {activeDashboard === 'equipments' ? (
+              <>Showing {filteredAssets.length === 0 ? 0 : (currentPage - 1) * (itemsPerPage === 'all' ? filteredAssets.length : itemsPerPage) + 1} to {Math.min(currentPage * (itemsPerPage === 'all' ? filteredAssets.length : itemsPerPage), filteredAssets.length)} of {filteredAssets.length} equipment</>
+            ) : (
+              <>Showing {filteredAccessories.length === 0 ? 0 : (currentPage - 1) * (itemsPerPage === 'all' ? filteredAccessories.length : itemsPerPage) + 1} to {Math.min(currentPage * (itemsPerPage === 'all' ? filteredAccessories.length : itemsPerPage), filteredAccessories.length)} of {filteredAccessories.length} accessories</>
+            )}
           </div>
           
           <div className="flex items-center gap-4">
@@ -1773,6 +2349,45 @@ function AssetInventory({ onBackToLanding }: AssetInventoryProps) {
         customColumns={customColumns}
         editAsset={editingAsset}
         brandOptions={brandOptions}
+        assetTypeOptions={assetTypeOptions}
+        userOptions={userOptions}
+      />
+
+      {/* Add/Edit Accessory Dialog */}
+      <AccessoriesDialog
+        open={accessoriesDialogOpen}
+        onOpenChange={closeAccessoriesDialog}
+        accessory={editingAccessory}
+        onSave={handleAddAccessory}
+        onDeleteClick={handleDeleteClick}
+        assetTypeOptions={assetTypeOptions}
+        brandOptions={brandOptions}
+        userOptions={userOptions}
+      />
+
+      {/* Delete Accessory Dialog */}
+      <DeleteAccessoryDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        accessory={deletingAccessory}
+        onConfirm={handleDeleteConfirm}
+      />
+
+      {/* Status Selection Dialog */}
+      <StatusSelectionDialog
+        open={statusSelectionOpen}
+        onOpenChange={setStatusSelectionOpen}
+        onSelectStatus={handleStatusSelection}
+      />
+
+      {/* Action Dialog */}
+      <ActionDialog
+        open={actionDialogOpen}
+        onOpenChange={setActionDialogOpen}
+        accessory={requestingAccessory}
+        selectedStatus={selectedActionStatus}
+        onSubmit={handleSubmitRequest}
+        userOptions={userOptions}
       />
 
       {/* Add Column Dialog */}
@@ -1863,7 +2478,69 @@ function AppContent({
   setShowSignup: (show: boolean) => void;
 }) {
   const { isAuthenticated } = useAuth();
-  const [currentPage, setCurrentPage] = useState<'landing' | 'inventory' | 'stock' | 'reports'>('landing');
+  const [currentPage, setCurrentPage] = useState<'landing' | 'inventory' | 'user-management' | 'reports' | 'monthly-reports' | 'activity-log'>('landing');
+
+  // Assets and Accessories state for Monthly Reports
+  const [assets, setAssets] = useState<Asset[]>(() => {
+    const saved = localStorage.getItem('assets');
+    if (saved) {
+      return JSON.parse(saved);
+    }
+    return initialAssets;
+  });
+
+  const [accessories, setAccessories] = useState<Accessory[]>(() => {
+    const saved = localStorage.getItem('accessories');
+    if (saved) {
+      return JSON.parse(saved);
+    }
+    return [];
+  });
+
+  // Activities state for Activity Log
+  const [activities, setActivities] = useState<ActivityLogEntry[]>(() => {
+    const saved = localStorage.getItem('activityLog');
+    return saved ? JSON.parse(saved).map((a: ActivityLogEntry) => ({
+      ...a,
+      timestamp: new Date(a.timestamp)
+    })) : [];
+  });
+
+  // Users state for User Management
+  const [users, setUsers] = useState<User[]>(() => {
+    const saved = localStorage.getItem('users');
+    if (saved) {
+      return JSON.parse(saved);
+    }
+    // Default users if none exist
+    return [
+      {
+        id: '1',
+        index: 0,
+        email: 'admin@company.com',
+        name: 'Admin User',
+        password: 'admin123',
+        status: 'active',
+        position: 'SAdmin',
+        dateCreated: new Date().toISOString(),
+      },
+      {
+        id: '2',
+        index: 1,
+        email: 'it@company.com',
+        name: 'IT Staff',
+        password: 'it123',
+        status: 'active',
+        position: 'IT/OJT',
+        dateCreated: new Date().toISOString(),
+      },
+    ];
+  });
+
+  // Save users to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem('users', JSON.stringify(users));
+  }, [users]);
 
   useEffect(() => {
     // Show login dialog if not authenticated
@@ -1883,6 +2560,42 @@ function AppContent({
       setShowLogin(true);
     }
   }, [isAuthenticated, showLogin, showSignup]);
+
+  // Sync assets, accessories, and activities from localStorage when page is visible
+  useEffect(() => {
+    const syncData = () => {
+      const savedAssets = localStorage.getItem('assets');
+      const savedAccessories = localStorage.getItem('accessories');
+      const savedActivities = localStorage.getItem('activityLog');
+      
+      if (savedAssets) {
+        setAssets(JSON.parse(savedAssets));
+      }
+      if (savedAccessories) {
+        setAccessories(JSON.parse(savedAccessories));
+      }
+      if (savedActivities) {
+        setActivities(JSON.parse(savedActivities).map((a: ActivityLogEntry) => ({
+          ...a,
+          timestamp: new Date(a.timestamp)
+        })));
+      }
+    };
+
+    // Initial sync
+    syncData();
+
+    // Sync on storage events (when localStorage changes in another tab/window)
+    window.addEventListener('storage', syncData);
+    
+    // Sync periodically to catch changes from the same tab
+    const interval = setInterval(syncData, 1000);
+
+    return () => {
+      window.removeEventListener('storage', syncData);
+      clearInterval(interval);
+    };
+  }, []);
 
   // Reset to landing page when user logs out
   useEffect(() => {
@@ -1918,7 +2631,7 @@ function AppContent({
     // If not authenticated and trying to close, do nothing (keep it open)
   };
 
-  const handleNavigate = (page: 'landing' | 'inventory' | 'stock' | 'reports') => {
+  const handleNavigate = (page: 'landing' | 'inventory' | 'user-management' | 'reports' | 'monthly-reports' | 'activity-log') => {
     setCurrentPage(page);
   };
 
@@ -1929,14 +2642,58 @@ function AppContent({
       case 'inventory':
         return (
           <InventoryPage 
-            inventoryComponent={<AssetInventory onBackToLanding={() => handleNavigate('landing')} />}
+            inventoryComponent={<AssetInventory onBackToLanding={() => handleNavigate('landing')} onNavigateToActivityLog={() => handleNavigate('activity-log')} />}
             onBack={() => handleNavigate('landing')}
           />
         );
-      case 'stock':
-        return <StockPage onBack={() => handleNavigate('landing')} />;
+      case 'user-management':
+        return (
+          <div className="min-h-screen bg-gray-50">
+            <div className="bg-white border-b border-gray-200 sticky top-0 z-30">
+              <div className="px-6 py-4 flex items-center gap-4">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleNavigate('landing')}
+                  className="gap-2 hover:bg-gray-100"
+                >
+                  <ArrowLeft className="h-4 w-4" style={{ color: '#06C755' }} />
+                  <span style={{ color: '#06C755' }}>Back to Main</span>
+                </Button>
+                <div className="flex items-center gap-2">
+                  <Users className="h-5 w-5" style={{ color: '#06C755' }} />
+                  <h1 className="text-xl text-gray-900">
+                    User Management
+                  </h1>
+                </div>
+              </div>
+            </div>
+            <UserManagementPage users={users} onUsersChange={setUsers} />
+          </div>
+        );
       case 'reports':
         return <ReportsPage onBack={() => handleNavigate('landing')} />;
+      case 'monthly-reports':
+        return (
+          <div className="min-h-screen bg-gray-50">
+            <div className="bg-white border-b border-gray-200 sticky top-0 z-30">
+              <div className="px-6 py-4 flex items-center gap-4">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleNavigate('landing')}
+                  className="gap-2 hover:bg-gray-100"
+                >
+                  <ArrowLeft className="h-4 w-4" style={{ color: '#06C755' }} />
+                  <span style={{ color: '#06C755' }}>Back to Main</span>
+                </Button>
+              </div>
+            </div>
+            <MonthlyReportsPage assets={assets} accessories={accessories} />
+          </div>
+        );
+      case 'activity-log':
+        return <ActivityLogFullPage activities={activities} onBack={() => handleNavigate('landing')} />;
       default:
         return <LandingPage onNavigate={handleNavigate} />;
     }

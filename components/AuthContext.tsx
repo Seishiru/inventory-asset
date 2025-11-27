@@ -3,7 +3,7 @@ import { createContext, useContext, useState, ReactNode } from 'react';
 export type UserRole = 'Admin' | 'IT/OJT';
 
 export interface User {
-  id: number;
+  id: string;
   username: string;
   role: UserRole;
   email: string;
@@ -19,51 +19,79 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Mock user database (in a real app, this would be in a backend)
+const mockUsers: Array<User & { password: string }> = [
+  {
+    id: '1',
+    username: 'admin',
+    email: 'admin@example.com',
+    password: 'admin123',
+    role: 'Admin',
+  },
+  {
+    id: '2',
+    username: 'ituser',
+    email: 'it@example.com',
+    password: 'it123',
+    role: 'IT/OJT',
+  },
+];
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(() => {
+    // Check for saved user in localStorage
     const savedUser = localStorage.getItem('currentUser');
     return savedUser ? JSON.parse(savedUser) : null;
   });
 
   const login = async (username: string, password: string): Promise<boolean> => {
-    try {
-      const res = await fetch('http://localhost:3000/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
-      });
-      if (!res.ok) return false;
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    const foundUser = mockUsers.find(
+      u => u.username === username && u.password === password
+    );
 
-      const data = await res.json();
-      setUser(data.user);
-      localStorage.setItem('currentUser', JSON.stringify(data.user));
+    if (foundUser) {
+      const { password: _, ...userWithoutPassword } = foundUser;
+      setUser(userWithoutPassword);
+      localStorage.setItem('currentUser', JSON.stringify(userWithoutPassword));
       return true;
-    } catch (err) {
-      console.error(err);
-      return false;
     }
+    
+    return false;
   };
 
-  const signup = async (username: string, email: string, password: string, role: UserRole) => {
-  try {
-    const res = await fetch('http://localhost:3000/api/auth/signup', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, email, password, role }),
-    });
-    if (!res.ok) return false;
+  const signup = async (
+    username: string,
+    email: string,
+    password: string,
+    role: UserRole
+  ): Promise<boolean> => {
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    // Check if user already exists
+    if (mockUsers.some(u => u.username === username || u.email === email)) {
+      return false;
+    }
 
-    const data = await res.json();
-    setUser(data.user);
-    localStorage.setItem('currentUser', JSON.stringify(data.user));
+    const newUser = {
+      id: String(mockUsers.length + 1),
+      username,
+      email,
+      password,
+      role,
+    };
+
+    mockUsers.push(newUser);
+    
+    const { password: _, ...userWithoutPassword } = newUser;
+    setUser(userWithoutPassword);
+    localStorage.setItem('currentUser', JSON.stringify(userWithoutPassword));
+    
     return true;
-  } catch {
-    return false;
-  }
-};
-
-
-
+  };
 
   const logout = () => {
     setUser(null);
@@ -71,7 +99,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, signup, logout, isAuthenticated: !!user }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        login,
+        signup,
+        logout,
+        isAuthenticated: !!user,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
@@ -79,6 +115,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 export function useAuth() {
   const context = useContext(AuthContext);
-  if (!context) throw new Error('useAuth must be used within AuthProvider');
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
   return context;
 }
