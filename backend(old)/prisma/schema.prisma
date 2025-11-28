@@ -1,0 +1,120 @@
+// prisma/schema.prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model LoginUser {
+  id       Int    @id @default(autoincrement())
+  username String @unique
+  email    String @unique
+  password String
+  role     String @default("IT/OJT") // IT/OJT, Admin
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@map("login_users")
+}
+
+model User {
+  id       Int    @id @default(autoincrement())
+  username String @unique
+  email    String @unique
+  password String
+  role     String @default("user")
+  name     String
+  status   String @default("active") // active, inactive
+  position String @default("Agent") // ITech, Agent, SAdmin, CSagent, SAgent, TLCSales
+
+  @@map("users")
+}
+
+model Brand {
+  id   Int    @id @default(autoincrement())
+  name String @unique
+
+  @@map("brands")
+}
+
+model AssetType {
+  id          Int         @id @default(autoincrement())
+  name        String      @unique
+  assets      Asset[]
+  accessories Accessory[]
+
+  @@map("asset_types")
+}
+
+model Asset {
+  id    String  @id @default(cuid())
+  index Int     @unique @default(autoincrement())
+  image String?
+
+  // Relation to AssetType
+  assetTypeId Int
+  assetType   AssetType @relation(fields: [assetTypeId], references: [id], onDelete: Cascade)
+
+  brandMake    String
+  modelNumber  String
+  serialNumber String   @unique
+  barcode      String?  @unique
+  description  String?
+  status       String   @default("On-Stock")
+  location     String
+  userName     String
+  createdBy    String
+  modifiedBy   String
+  createdAt    DateTime @default(now())
+  lastUpdated  DateTime @updatedAt
+  customFields Json?
+  auditLog     Json?
+  attachments  Json?
+  comments     Json?
+
+  // Barcode fields
+  barcodePath        String?
+  barcodeGeneratedAt DateTime?
+
+  @@map("assets")
+}
+
+model Accessory {
+  id    String @id @default(cuid())
+  index Int    @unique @default(autoincrement())
+
+  // Relation to AssetType
+  assetTypeId Int
+  assetType   AssetType @relation(fields: [assetTypeId], references: [id], onDelete: Cascade)
+
+  modelNumber  String?
+  brandMake    String?
+  barcode      String?  @unique
+  serialNumber String?
+  quantity     Int      @default(0)
+  status       String   @default("On-Stock")
+  userName     String?
+  location     String?
+  comments     Json?
+  originalId   String?
+  auditLog     Json?
+  dateCreated  DateTime @default(now())
+  lastUpdated  DateTime @updatedAt
+
+  @@map("accessories")
+}
+
+model ActivityLog {
+  id        Int      @id @default(autoincrement())
+  type      String
+  username  String
+  action    String
+  details   String?
+  timestamp DateTime @default(now())
+
+  @@map("activity_log")
+}

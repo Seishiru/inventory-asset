@@ -6,6 +6,8 @@ import assetsRouter from './routes/assets';
 import brandsRouter from './routes/brands';
 import userRoutes from './routes/users';
 import accessoriesRouter from './routes/accessories';
+import loginUsersRouter from './routes/loginUsers';
+import activityLogsRouter from './routes/activityLogs';
 import { prisma } from './prisma'; // Import your Prisma instance
 
 const app = express();
@@ -26,6 +28,8 @@ app.use('/api/auth', authRouter);
 app.use('/api/brands', brandsRouter);
 app.use('/api/users', userRoutes);
 app.use('/api/accessories', accessoriesRouter);
+app.use('/api/login-users', loginUsersRouter);
+app.use('/api/activity-logs', activityLogsRouter);
 
 // Test route
 app.get('/api/test', (req, res) => res.json({ message: 'Server is working!' }));
