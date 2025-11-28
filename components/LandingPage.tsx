@@ -40,9 +40,9 @@ export function LandingPage({ onNavigate }: LandingPageProps) {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+      <div className="bg-white border-b border-gray-200">
         <div className="container mx-auto px-6 py-8">
           <div className="flex items-center gap-3">
             <div
@@ -52,10 +52,10 @@ export function LandingPage({ onNavigate }: LandingPageProps) {
               <Package className="h-8 w-8 text-white" />
             </div>
             <div>
-              <h1 className="text-3xl text-gray-900 dark:text-gray-100">
+              <h1 className="text-3xl text-gray-900">
                 Asset Management System
               </h1>
-              <p className="text-gray-600 dark:text-gray-400 mt-1">
+              <p className="text-gray-600 mt-1">
                 Select a module to get started
               </p>
             </div>
@@ -73,7 +73,7 @@ export function LandingPage({ onNavigate }: LandingPageProps) {
                 key={card.id}
                 className={`group relative overflow-hidden transition-all duration-300 ${
                   card.available
-                    ? 'cursor-pointer hover:shadow-lg hover:scale-105 dark:hover:bg-gray-700'
+                    ? 'cursor-pointer hover:shadow-lg hover:scale-105'
                     : 'opacity-60 cursor-not-allowed'
                 }`}
                 onClick={() => card.available && onNavigate(card.id)}
@@ -98,19 +98,19 @@ export function LandingPage({ onNavigate }: LandingPageProps) {
                     </div>
 
                     {/* Title */}
-                    <h2 className="text-xl text-gray-900 dark:text-gray-100">
+                    <h2 className="text-xl text-gray-900">
                       {card.title}
                     </h2>
 
                     {/* Description */}
-                    <p className="text-gray-600 dark:text-gray-400 text-sm">
+                    <p className="text-gray-600 text-sm">
                       {card.description}
                     </p>
 
                     {/* Status Badge */}
                     {!card.available && (
                       <div className="pt-2">
-                        <span className="inline-block px-3 py-1 text-xs bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 rounded-full">
+                        <span className="inline-block px-3 py-1 text-xs bg-yellow-100 text-yellow-800 rounded-full">
                           Under Maintenance
                         </span>
                       </div>

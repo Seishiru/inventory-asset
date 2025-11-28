@@ -67,7 +67,7 @@ export function SignupDialog({ open, onOpenChange, onSwitchToLogin }: SignupDial
       <DialogPrimitive.Portal>
         <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/50 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
         <DialogPrimitive.Content 
-          className="dark:bg-gray-900 dark:text-white dark:border-gray-700 bg-white data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border p-6 shadow-lg duration-200 sm:max-w-md"
+          className="bg-white data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border p-6 shadow-lg duration-200 sm:max-w-md"
           onEscapeKeyDown={(e) => e.preventDefault()}
           onPointerDownOutside={(e) => e.preventDefault()}
           onInteractOutside={(e) => e.preventDefault()}
@@ -81,7 +81,7 @@ export function SignupDialog({ open, onOpenChange, onSwitchToLogin }: SignupDial
             <DialogPrimitive.Title className="text-center text-2xl">
               Create Account
             </DialogPrimitive.Title>
-            <DialogPrimitive.Description className="dark:text-gray-300 text-center text-sm text-gray-600">
+            <DialogPrimitive.Description className="text-center text-sm text-gray-600">
               Sign up to access the Asset Inventory
             </DialogPrimitive.Description>
           </div>
@@ -96,7 +96,6 @@ export function SignupDialog({ open, onOpenChange, onSwitchToLogin }: SignupDial
               onChange={(e) => setUsername(e.target.value)}
               placeholder="Choose a username"
               disabled={loading}
-              className="dark:bg-gray-800 dark:border-gray-700"
             />
           </div>
 
@@ -109,17 +108,16 @@ export function SignupDialog({ open, onOpenChange, onSwitchToLogin }: SignupDial
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Enter your email"
               disabled={loading}
-              className="dark:bg-gray-800 dark:border-gray-700"
             />
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="signup-role">Role</Label>
             <Select value={role} onValueChange={(value) => setRole(value as UserRole)} disabled={loading}>
-              <SelectTrigger id="signup-role" className="dark:bg-gray-800 dark:border-gray-700">
+              <SelectTrigger id="signup-role">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
+              <SelectContent>
                 <SelectItem value="Admin">Admin</SelectItem>
                 <SelectItem value="IT/OJT">IT/OJT</SelectItem>
               </SelectContent>
@@ -136,12 +134,12 @@ export function SignupDialog({ open, onOpenChange, onSwitchToLogin }: SignupDial
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Create a password"
                 disabled={loading}
-                className="dark:bg-gray-800 dark:border-gray-700 pr-10"
+                className="pr-10"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="dark:text-gray-400 dark:hover:text-gray-200 absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
               >
                 {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
@@ -158,12 +156,12 @@ export function SignupDialog({ open, onOpenChange, onSwitchToLogin }: SignupDial
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="Confirm your password"
                 disabled={loading}
-                className="dark:bg-gray-800 dark:border-gray-700 pr-10"
+                className="pr-10"
               />
               <button
                 type="button"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="dark:text-gray-400 dark:hover:text-gray-200 absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
               >
                 {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
@@ -181,7 +179,7 @@ export function SignupDialog({ open, onOpenChange, onSwitchToLogin }: SignupDial
             </Button>
           </div>
 
-          <div className="dark:text-gray-300 text-center text-sm text-gray-600">
+          <div className="text-center text-sm text-gray-600">
             Already have an account?{' '}
             <button
               type="button"

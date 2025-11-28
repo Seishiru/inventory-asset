@@ -169,12 +169,11 @@ const generateArchivedReports = (): ArchivedReport[] => {
 };
 
 interface MonthlyReportsPageProps {
-  darkMode?: boolean;
   assets?: any[]; // Real inventory assets
   accessories?: any[]; // Real accessories
 }
 
-export function MonthlyReportsPage({ darkMode = false, assets = [], accessories = [] }: MonthlyReportsPageProps) {
+export function MonthlyReportsPage({ assets = [], accessories = [] }: MonthlyReportsPageProps) {
   const currentMonthYear = new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
   
   // Generate asset cards from real inventory data
@@ -568,15 +567,15 @@ export function MonthlyReportsPage({ darkMode = false, assets = [], accessories 
   };
 
   return (
-    <div className={`p-6 space-y-6 ${darkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
+    <div className="p-6 space-y-6 bg-gray-50">
       {/* Header */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className={`text-3xl ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>
+            <h1 className="text-3xl text-gray-900">
               DIPH Monthly Inventory Summary Report
             </h1>
-            <p className={`text-xl mt-2 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`} style={{ color: LINE_GREEN }}>
+            <p className="text-xl mt-2 text-gray-600" style={{ color: LINE_GREEN }}>
               for {selectedMonthYear}
             </p>
           </div>
@@ -606,9 +605,9 @@ export function MonthlyReportsPage({ darkMode = false, assets = [], accessories 
         <>
           {/* Global Summary Section */}
           <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
-            <Card className={darkMode ? 'bg-gray-800 border-gray-700' : ''}>
+            <Card>
               <CardHeader className="pb-2">
-                <CardTitle className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                <CardTitle className="text-sm text-gray-600">
                   Total Asset Types
                 </CardTitle>
               </CardHeader>
@@ -618,9 +617,9 @@ export function MonthlyReportsPage({ darkMode = false, assets = [], accessories 
                 </div>
               </CardContent>
             </Card>
-            <Card className={darkMode ? 'bg-gray-800 border-gray-700' : ''}>
+            <Card>
               <CardHeader className="pb-2">
-                <CardTitle className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                <CardTitle className="text-sm text-gray-600">
                   Total On-Stock
                 </CardTitle>
               </CardHeader>
@@ -630,9 +629,9 @@ export function MonthlyReportsPage({ darkMode = false, assets = [], accessories 
                 </div>
               </CardContent>
             </Card>
-            <Card className={darkMode ? 'bg-gray-800 border-gray-700' : ''}>
+            <Card>
               <CardHeader className="pb-2">
-                <CardTitle className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                <CardTitle className="text-sm text-gray-600">
                   Total Issued
                 </CardTitle>
               </CardHeader>
@@ -642,9 +641,9 @@ export function MonthlyReportsPage({ darkMode = false, assets = [], accessories 
                 </div>
               </CardContent>
             </Card>
-            <Card className={darkMode ? 'bg-gray-800 border-gray-700' : ''}>
+            <Card>
               <CardHeader className="pb-2">
-                <CardTitle className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                <CardTitle className="text-sm text-gray-600">
                   Under Maintenance
                 </CardTitle>
               </CardHeader>
@@ -654,9 +653,9 @@ export function MonthlyReportsPage({ darkMode = false, assets = [], accessories 
                 </div>
               </CardContent>
             </Card>
-            <Card className={darkMode ? 'bg-gray-800 border-gray-700' : ''}>
+            <Card>
               <CardHeader className="pb-2">
-                <CardTitle className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                <CardTitle className="text-sm text-gray-600">
                   Total Retired
                 </CardTitle>
               </CardHeader>
@@ -666,9 +665,9 @@ export function MonthlyReportsPage({ darkMode = false, assets = [], accessories 
                 </div>
               </CardContent>
             </Card>
-            <Card className={darkMode ? 'bg-gray-800 border-gray-700' : ''}>
+            <Card>
               <CardHeader className="pb-2">
-                <CardTitle className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                <CardTitle className="text-sm text-gray-600">
                   Total Assets
                 </CardTitle>
               </CardHeader>
@@ -682,9 +681,9 @@ export function MonthlyReportsPage({ darkMode = false, assets = [], accessories 
 
           {/* Charts Section */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card className={darkMode ? 'bg-gray-800 border-gray-700' : ''}>
+            <Card>
               <CardHeader>
-                <CardTitle className={darkMode ? 'text-gray-100' : ''}>Asset Distribution by Type</CardTitle>
+                <CardTitle>Asset Distribution by Type</CardTitle>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
@@ -703,9 +702,9 @@ export function MonthlyReportsPage({ darkMode = false, assets = [], accessories 
               </CardContent>
             </Card>
 
-            <Card className={darkMode ? 'bg-gray-800 border-gray-700' : ''}>
+            <Card>
               <CardHeader>
-                <CardTitle className={darkMode ? 'text-gray-100' : ''}>Overall Status Distribution</CardTitle>
+                <CardTitle>Overall Status Distribution</CardTitle>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
@@ -732,9 +731,9 @@ export function MonthlyReportsPage({ darkMode = false, assets = [], accessories 
           </div>
 
           {/* Tracker Section - Month-to-Month Trends */}
-          <Card className={darkMode ? 'bg-gray-800 border-gray-700' : ''}>
+          <Card>
             <CardHeader>
-              <CardTitle className={darkMode ? 'text-gray-100' : ''}>Asset Trends (Last 6 Months)</CardTitle>
+              <CardTitle>Asset Trends (Last 6 Months)</CardTitle>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
@@ -754,16 +753,16 @@ export function MonthlyReportsPage({ darkMode = false, assets = [], accessories 
           </Card>
 
           {/* Filters & Search */}
-          <Card className={darkMode ? 'bg-gray-800 border-gray-700' : ''}>
+          <Card>
             <CardHeader>
-              <CardTitle className={darkMode ? 'text-gray-100' : ''}>Filters & Search</CardTitle>
+              <CardTitle>Filters & Search</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
                 <div className="space-y-2">
                   <Label>Report Type</Label>
                   <Select value={reportType} onValueChange={(value: any) => setReportType(value)}>
-                    <SelectTrigger className={darkMode ? 'bg-gray-700 border-gray-600' : ''}>
+                    <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -783,7 +782,7 @@ export function MonthlyReportsPage({ darkMode = false, assets = [], accessories 
                       placeholder="Search assets..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className={`pl-8 ${darkMode ? 'bg-gray-700 border-gray-600' : ''}`}
+                      className={`pl-8`}
                     />
                   </div>
                 </div>
@@ -791,7 +790,7 @@ export function MonthlyReportsPage({ darkMode = false, assets = [], accessories 
                 <div className="space-y-2">
                   <Label>Asset Type</Label>
                   <Select value={typeFilter} onValueChange={setTypeFilter}>
-                    <SelectTrigger className={darkMode ? 'bg-gray-700 border-gray-600' : ''}>
+                    <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -808,7 +807,7 @@ export function MonthlyReportsPage({ darkMode = false, assets = [], accessories 
                 <div className="space-y-2">
                   <Label>Brand</Label>
                   <Select value={brandFilter} onValueChange={setBrandFilter}>
-                    <SelectTrigger className={darkMode ? 'bg-gray-700 border-gray-600' : ''}>
+                    <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -825,7 +824,7 @@ export function MonthlyReportsPage({ darkMode = false, assets = [], accessories 
                 <div className="space-y-2">
                   <Label>Status</Label>
                   <Select value={statusFilter} onValueChange={setStatusFilter}>
-                    <SelectTrigger className={darkMode ? 'bg-gray-700 border-gray-600' : ''}>
+                    <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -859,9 +858,9 @@ export function MonthlyReportsPage({ darkMode = false, assets = [], accessories 
           </Card>
 
           {/* Export Full Report */}
-          <Card className={darkMode ? 'bg-gray-800 border-gray-700' : ''}>
+          <Card>
             <CardHeader>
-              <CardTitle className={darkMode ? 'text-gray-100' : ''}>Export Full Report</CardTitle>
+              <CardTitle>Export Full Report</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex flex-wrap gap-2">
@@ -896,19 +895,16 @@ export function MonthlyReportsPage({ darkMode = false, assets = [], accessories 
 
           {/* Asset Cards */}
           <div className="space-y-4">
-            <h2 className={`text-2xl ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>
+            <h2 className="text-2xl text-gray-900">
               Asset Cards ({filteredCards.length})
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {filteredCards.map((card) => (
-                <Card
-                  key={card.id}
-                  className={darkMode ? 'bg-gray-800 border-gray-700' : ''}
-                >
+                <Card key={card.id}>
                   <div ref={(el) => (cardRefs.current[card.id] = el)}>
                     <CardHeader>
                       <div className="flex items-center justify-between">
-                        <CardTitle className={darkMode ? 'text-gray-100' : ''}>{card.assetType}</CardTitle>
+                        <CardTitle>{card.assetType}</CardTitle>
                         <div className="flex gap-1">
                           <Button
                             variant="ghost"
@@ -931,40 +927,40 @@ export function MonthlyReportsPage({ darkMode = false, assets = [], accessories 
                     </CardHeader>
                     <CardContent className="space-y-3">
                       <div>
-                        <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Make/Brand</p>
-                        <p className={darkMode ? 'text-gray-100' : 'text-gray-900'}>{card.make}</p>
+                        <p className={`text-sm text-gray-600`}>Make/Brand</p>
+                        <p className={`text-gray-900`}>{card.make}</p>
                       </div>
                       <div>
-                        <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Model</p>
-                        <p className={darkMode ? 'text-gray-100' : 'text-gray-900'}>{card.model}</p>
+                        <p className={`text-sm text-gray-600`}>Model</p>
+                        <p className={`text-gray-900`}>{card.model}</p>
                       </div>
                       <div className="space-y-2 pt-2 border-t">
                         <div className="flex justify-between items-center">
-                          <span className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>On-Stock:</span>
+                          <span className={`text-sm text-gray-600`}>On-Stock:</span>
                           <span className="px-2 py-1 rounded text-white text-sm" style={{ backgroundColor: STATUS_COLORS.onStock }}>
                             {card.onStock}
                           </span>
                         </div>
                         <div className="flex justify-between items-center">
-                          <span className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Issued:</span>
+                          <span className={`text-sm text-gray-600`}>Issued:</span>
                           <span className="px-2 py-1 rounded text-white text-sm" style={{ backgroundColor: STATUS_COLORS.issued }}>
                             {card.issued}
                           </span>
                         </div>
                         <div className="flex justify-between items-center">
-                          <span className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Maintenance:</span>
+                          <span className={`text-sm text-gray-600`}>Maintenance:</span>
                           <span className="px-2 py-1 rounded text-white text-sm" style={{ backgroundColor: STATUS_COLORS.maintenance }}>
                             {card.maintenance}
                           </span>
                         </div>
                         <div className="flex justify-between items-center">
-                          <span className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Retired:</span>
+                          <span className={`text-sm text-gray-600`}>Retired:</span>
                           <span className="px-2 py-1 rounded text-white text-sm" style={{ backgroundColor: STATUS_COLORS.retired }}>
                             {card.retired}
                           </span>
                         </div>
                         <div className="flex justify-between items-center pt-2 border-t">
-                          <span className={darkMode ? 'text-gray-100' : 'text-gray-900'}>Total:</span>
+                          <span className={`text-gray-900`}>Total:</span>
                           <span className="px-3 py-1 rounded text-white" style={{ backgroundColor: LINE_GREEN }}>
                             {card.total}
                           </span>
@@ -978,9 +974,9 @@ export function MonthlyReportsPage({ darkMode = false, assets = [], accessories 
           </div>
 
           {/* Notes / Remarks */}
-          <Card className={darkMode ? 'bg-gray-800 border-gray-700' : ''}>
+          <Card>
             <CardHeader>
-              <CardTitle className={darkMode ? 'text-gray-100' : ''}>Notes & Remarks</CardTitle>
+              <CardTitle>Notes & Remarks</CardTitle>
             </CardHeader>
             <CardContent>
               <Textarea
@@ -988,7 +984,7 @@ export function MonthlyReportsPage({ darkMode = false, assets = [], accessories 
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 rows={4}
-                className={darkMode ? 'bg-gray-700 border-gray-600 text-gray-100' : ''}
+                className=""
               />
               <Button className="mt-2" style={{ backgroundColor: LINE_GREEN }} onClick={() => toast.success('Notes saved')}>
                 Save Notes
@@ -998,14 +994,14 @@ export function MonthlyReportsPage({ darkMode = false, assets = [], accessories 
         </>
       ) : (
         /* Archive Section */
-        <Card className={darkMode ? 'bg-gray-800 border-gray-700' : ''}>
+        <Card>
           <CardHeader>
-            <CardTitle className={darkMode ? 'text-gray-100' : ''}>Archived Reports</CardTitle>
+            <CardTitle>Archived Reports</CardTitle>
           </CardHeader>
           <CardContent>
             <Table>
               <TableHeader>
-                <TableRow className={darkMode ? 'border-gray-700' : ''}>
+                <TableRow>
                   <TableHead>Month/Year</TableHead>
                   <TableHead>Last Updated</TableHead>
                   <TableHead>Edited By</TableHead>
@@ -1015,15 +1011,15 @@ export function MonthlyReportsPage({ darkMode = false, assets = [], accessories 
               </TableHeader>
               <TableBody>
                 {archivedReports.map((report) => (
-                  <TableRow key={report.id} className={darkMode ? 'border-gray-700' : ''}>
-                    <TableCell className={darkMode ? 'text-gray-100' : ''}>{report.monthYear}</TableCell>
-                    <TableCell className={darkMode ? 'text-gray-400' : 'text-gray-600'}>
+                  <TableRow key={report.id}>
+                    <TableCell className={`text-gray-900`}>{report.monthYear}</TableCell>
+                    <TableCell className={`text-gray-600`}>
                       {new Date(report.lastUpdated).toLocaleDateString()}
                     </TableCell>
-                    <TableCell className={darkMode ? 'text-gray-400' : 'text-gray-600'}>
+                    <TableCell className={`text-gray-600`}>
                       {report.editedBy || 'System'}
                     </TableCell>
-                    <TableCell className={darkMode ? 'text-gray-100' : ''}>
+                    <TableCell className={`text-gray-900`}>
                       {report.cards.reduce((sum, card) => sum + card.total, 0)}
                     </TableCell>
                     <TableCell>
@@ -1055,7 +1051,7 @@ export function MonthlyReportsPage({ darkMode = false, assets = [], accessories 
 
       {/* Edit Archive Dialog */}
       <Dialog open={archiveDialogOpen} onOpenChange={setArchiveDialogOpen}>
-        <DialogContent className={`max-w-4xl max-h-[90vh] overflow-y-auto ${darkMode ? 'bg-gray-800 text-gray-100' : ''}`}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Edit Archived Report - {editingArchive?.monthYear}</DialogTitle>
             <DialogDescription>
@@ -1072,14 +1068,14 @@ export function MonthlyReportsPage({ darkMode = false, assets = [], accessories 
                     setEditingArchive({ ...editingArchive, notes: e.target.value })
                   }
                   rows={3}
-                  className={darkMode ? 'bg-gray-700 border-gray-600' : ''}
+                  className=""
                 />
               </div>
               <div className="space-y-2">
                 <Label>Asset Cards</Label>
                 {editingArchive.cards.map((card, index) => (
                   <div key={card.id} className="p-3 border rounded space-y-2">
-                    <p className={darkMode ? 'text-gray-100' : 'text-gray-900'}>{card.assetType} - {card.make} {card.model}</p>
+                    <p className={`text-gray-900`}>{card.assetType} - {card.make} {card.model}</p>
                     <div className="grid grid-cols-5 gap-2">
                       <div>
                         <Label className="text-xs">On-Stock</Label>
@@ -1092,7 +1088,7 @@ export function MonthlyReportsPage({ darkMode = false, assets = [], accessories 
                             newCards[index].total = newCards[index].onStock + newCards[index].issued + newCards[index].maintenance + newCards[index].retired;
                             setEditingArchive({ ...editingArchive, cards: newCards });
                           }}
-                          className={darkMode ? 'bg-gray-700 border-gray-600' : ''}
+                          className=""
                         />
                       </div>
                       <div>
@@ -1106,7 +1102,7 @@ export function MonthlyReportsPage({ darkMode = false, assets = [], accessories 
                             newCards[index].total = newCards[index].onStock + newCards[index].issued + newCards[index].maintenance + newCards[index].retired;
                             setEditingArchive({ ...editingArchive, cards: newCards });
                           }}
-                          className={darkMode ? 'bg-gray-700 border-gray-600' : ''}
+                          className=""
                         />
                       </div>
                       <div>
@@ -1120,7 +1116,7 @@ export function MonthlyReportsPage({ darkMode = false, assets = [], accessories 
                             newCards[index].total = newCards[index].onStock + newCards[index].issued + newCards[index].maintenance + newCards[index].retired;
                             setEditingArchive({ ...editingArchive, cards: newCards });
                           }}
-                          className={darkMode ? 'bg-gray-700 border-gray-600' : ''}
+                          className=""
                         />
                       </div>
                       <div>
@@ -1134,7 +1130,7 @@ export function MonthlyReportsPage({ darkMode = false, assets = [], accessories 
                             newCards[index].total = newCards[index].onStock + newCards[index].issued + newCards[index].maintenance + newCards[index].retired;
                             setEditingArchive({ ...editingArchive, cards: newCards });
                           }}
-                          className={darkMode ? 'bg-gray-700 border-gray-600' : ''}
+                          className=""
                         />
                       </div>
                       <div>
@@ -1143,7 +1139,7 @@ export function MonthlyReportsPage({ darkMode = false, assets = [], accessories 
                           type="number"
                           value={card.total}
                           disabled
-                          className={darkMode ? 'bg-gray-700 border-gray-600' : ''}
+                          className=""
                         />
                       </div>
                     </div>

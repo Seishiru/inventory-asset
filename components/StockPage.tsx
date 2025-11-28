@@ -124,10 +124,9 @@ const availableUsers = [
 
 interface StockPageProps {
   onBack?: () => void;
-  darkMode?: boolean;
 }
 
-export function StockPage({ onBack, darkMode = false }: StockPageProps) {
+export function StockPage({ onBack }: StockPageProps) {
   const [assets, setAssets] = useState<StockAsset[]>(initialStockAssets);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -345,16 +344,16 @@ export function StockPage({ onBack, darkMode = false }: StockPageProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-gray-50">
       {/* Header with Back Button */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-30">
+      <div className="bg-white border-b border-gray-200 sticky top-0 z-30">
         <div className="px-6 py-4 flex items-center gap-4">
           {onBack && (
             <Button
               variant="ghost"
               size="sm"
               onClick={onBack}
-              className="gap-2 hover:bg-gray-100 dark:hover:bg-gray-700"
+              className="gap-2 hover:bg-gray-100"
             >
               <ArrowLeft className="h-4 w-4" style={{ color: LINE_GREEN }} />
               <span style={{ color: LINE_GREEN }}>Back to Main</span>
@@ -362,7 +361,7 @@ export function StockPage({ onBack, darkMode = false }: StockPageProps) {
           )}
           <div className="flex items-center gap-2">
             <Archive className="h-5 w-5" style={{ color: LINE_GREEN }} />
-            <h1 className="text-xl text-gray-900 dark:text-gray-100">
+            <h1 className="text-xl text-gray-900">
               Stock Assets
             </h1>
           </div>
@@ -382,9 +381,9 @@ export function StockPage({ onBack, darkMode = false }: StockPageProps) {
       <div className="p-6 space-y-6">
         {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card className={darkMode ? 'bg-gray-800 border-gray-700' : ''}>
+          <Card>
             <CardHeader className="pb-2">
-              <CardTitle className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Total Items</CardTitle>
+              <CardTitle className="text-sm text-gray-600">Total Items</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl" style={{ color: LINE_GREEN }}>
@@ -392,9 +391,9 @@ export function StockPage({ onBack, darkMode = false }: StockPageProps) {
               </div>
             </CardContent>
           </Card>
-          <Card className={darkMode ? 'bg-gray-800 border-gray-700' : ''}>
+          <Card>
             <CardHeader className="pb-2">
-              <CardTitle className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Available</CardTitle>
+              <CardTitle className="text-sm text-gray-600">Available</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl text-green-600">
@@ -402,9 +401,9 @@ export function StockPage({ onBack, darkMode = false }: StockPageProps) {
               </div>
             </CardContent>
           </Card>
-          <Card className={darkMode ? 'bg-gray-800 border-gray-700' : ''}>
+          <Card>
             <CardHeader className="pb-2">
-              <CardTitle className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Low Stock</CardTitle>
+              <CardTitle className="text-sm text-gray-600">Low Stock</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl text-yellow-600">
@@ -412,9 +411,9 @@ export function StockPage({ onBack, darkMode = false }: StockPageProps) {
               </div>
             </CardContent>
           </Card>
-          <Card className={darkMode ? 'bg-gray-800 border-gray-700' : ''}>
+          <Card>
             <CardHeader className="pb-2">
-              <CardTitle className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Out of Stock</CardTitle>
+              <CardTitle className="text-sm text-gray-600">Out of Stock</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl text-red-600">
@@ -433,13 +432,13 @@ export function StockPage({ onBack, darkMode = false }: StockPageProps) {
               setSearchTerm(e.target.value);
               setCurrentPage(1);
             }}
-            className={`flex-1 ${darkMode ? 'bg-gray-800 border-gray-700 text-gray-100' : ''}`}
+            className={`flex-1`}
           />
           <Select value={statusFilter} onValueChange={(value) => {
             setStatusFilter(value);
             setCurrentPage(1);
           }}>
-            <SelectTrigger className={`w-[180px] ${darkMode ? 'bg-gray-800 border-gray-700 text-gray-100' : ''}`}>
+            <SelectTrigger className={`w-[180px]`}>
               <SelectValue placeholder="Filter by status" />
             </SelectTrigger>
             <SelectContent>
@@ -454,7 +453,7 @@ export function StockPage({ onBack, darkMode = false }: StockPageProps) {
             setCategoryFilter(value);
             setCurrentPage(1);
           }}>
-            <SelectTrigger className={`w-[180px] ${darkMode ? 'bg-gray-800 border-gray-700 text-gray-100' : ''}`}>
+            <SelectTrigger className={`w-[180px]`}>
               <SelectValue placeholder="Filter by category" />
             </SelectTrigger>
             <SelectContent>
@@ -471,7 +470,7 @@ export function StockPage({ onBack, darkMode = false }: StockPageProps) {
           <div
             className="flex items-center justify-between px-4 py-3 rounded-lg border"
             style={{ 
-              backgroundColor: darkMode ? '#1a4d2e' : '#f0fdf4', 
+              backgroundColor: '#f0fdf4',
               borderColor: LINE_GREEN 
             }}
           >
@@ -495,7 +494,7 @@ export function StockPage({ onBack, darkMode = false }: StockPageProps) {
               variant="ghost"
               size="sm"
               onClick={clearSelection}
-              className={darkMode ? 'hover:bg-gray-700' : 'hover:bg-green-100'}
+              className={'hover:bg-green-100'}
             >
               <X className="h-4 w-4 mr-1" />
               Clear Selection
@@ -504,12 +503,12 @@ export function StockPage({ onBack, darkMode = false }: StockPageProps) {
         )}
 
         {/* Table */}
-        <Card className={darkMode ? 'bg-gray-800 border-gray-700' : ''}>
+        <Card>
           <CardContent className="p-0">
             <div className="overflow-x-auto" ref={tableRef}>
               <Table>
                 <TableHeader>
-                  <TableRow className={darkMode ? 'border-gray-700' : ''}>
+                  <TableRow>
                     <TableHead className="w-[50px]">
                       <div className="flex items-center gap-2">
                         <Checkbox
@@ -641,14 +640,12 @@ export function StockPage({ onBack, darkMode = false }: StockPageProps) {
                     const isHovered = hoveredRow === asset.id;
                     const showCheckbox = isSelected || isHovered;
                     
-                    return (
+                      return (
                       <TableRow
                         key={asset.id}
                         className={`${
-                          isSelected ? (darkMode ? 'bg-blue-900/50' : 'bg-blue-50') : ''
-                        } ${isHovered ? (darkMode ? 'bg-gray-700' : 'bg-gray-50') : ''} ${
-                          darkMode ? 'border-gray-700' : ''
-                        } transition-colors cursor-pointer`}
+                          isSelected ? 'bg-blue-50' : ''
+                        } ${isHovered ? 'bg-gray-50' : ''} transition-colors cursor-pointer`}
                         onMouseEnter={() => setHoveredRow(asset.id)}
                         onMouseLeave={() => setHoveredRow(null)}
                         onDoubleClick={() => handleRowDoubleClick(asset)}
@@ -664,7 +661,7 @@ export function StockPage({ onBack, darkMode = false }: StockPageProps) {
                         </TableCell>
                         <TableCell style={{ width: columnWidths.index }}>{asset.index + 1}</TableCell>
                         <TableCell style={{ width: columnWidths.image }}>
-                          <div className="w-12 h-12 bg-gray-100 dark:bg-gray-700 rounded flex items-center justify-center">
+                          <div className="w-12 h-12 bg-gray-100 rounded flex items-center justify-center">
                             <Package className="h-6 w-6 text-gray-400" />
                           </div>
                         </TableCell>
@@ -700,7 +697,7 @@ export function StockPage({ onBack, darkMode = false }: StockPageProps) {
         {/* Pagination */}
         {itemsPerPage !== 'all' && totalPages > 1 && (
           <div className="flex items-center justify-between">
-            <div className="text-sm text-gray-600 dark:text-gray-400">
+            <div className="text-sm text-gray-600">
               Showing {((currentPage - 1) * (itemsPerPage as number)) + 1} to {Math.min(currentPage * (itemsPerPage as number), filteredAssets.length)} of {filteredAssets.length} items
             </div>
             <div className="flex items-center gap-2">

@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-@custom-variant dark (&:is(.dark *));
+/* dark variant support removed - project uses light mode only */
 
 :root {
   --font-size: 16px;
@@ -45,44 +45,6 @@
   --sidebar-ring: #b0b0b0;
 }
 
-.dark {
-  --background: #0a0a0a;
-  --foreground: #fafafa;
-  --card: #1a1a1a;
-  --card-foreground: #fafafa;
-  --popover: #1a1a1a;
-  --popover-foreground: #fafafa;
-  --primary: #fafafa;
-  --primary-foreground: #0a0a0a;
-  --secondary: #2a2a2a;
-  --secondary-foreground: #fafafa;
-  --muted: #2a2a2a;
-  --muted-foreground: #a0a0a0;
-  --accent: #2a2a2a;
-  --accent-foreground: #fafafa;
-  --destructive: #dc2626;
-  --destructive-foreground: #fafafa;
-  --border: rgba(255, 255, 255, 0.1);
-  --input: #2a2a2a;
-  --input-background: #2a2a2a;
-  --switch-background: #3a3a3a;
-  --font-weight-medium: 500;
-  --font-weight-normal: 400;
-  --ring: #4a4a4a;
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: #1a1a1a;
-  --sidebar-foreground: #fafafa;
-  --sidebar-primary: #06C755;
-  --sidebar-primary-foreground: #fafafa;
-  --sidebar-accent: #2a2a2a;
-  --sidebar-accent-foreground: #fafafa;
-  --sidebar-border: #2a2a2a;
-  --sidebar-ring: #4a4a4a;
-}
 
 @theme inline {
   --color-background: var(--background);
@@ -285,50 +247,7 @@ html {
   -ms-user-select: none !important;
 }
 
-/* Dark mode specific styles */
-.dark {
-  color-scheme: dark;
-}
-
-.dark body {
-  background-color: #0a0a0a;
-  color: #fafafa;
-}
-
-.dark table {
-  border-color: rgba(255, 255, 255, 0.1);
-}
-
-.dark th,
-.dark td {
-  border-color: rgba(255, 255, 255, 0.1);
-}
-
-.dark input:not([type="checkbox"]):not([type="radio"]) {
-  background-color: #2a2a2a;
-  border-color: rgba(255, 255, 255, 0.1);
-  color: #fafafa;
-}
-
-.dark input:not([type="checkbox"]):not([type="radio"])::placeholder {
-  color: #6a6a6a;
-}
-
-.dark select {
-  background-color: #2a2a2a;
-  border-color: rgba(255, 255, 255, 0.1);
-  color: #fafafa;
-}
-
-.dark textarea {
-  background-color: #2a2a2a;
-  border-color: rgba(255, 255, 255, 0.1);
-  color: #fafafa;
-}
-
-.dark button:not([style*="background"]) {
-  border-color: rgba(255, 255, 255, 0.1);
-}
+/* Dark-mode selectors removed; project uses light defaults only */
 
 /* Safety utilities for classes referenced by older @apply usages */
 @layer utilities {

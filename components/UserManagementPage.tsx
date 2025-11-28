@@ -103,12 +103,10 @@ const initialUsers: User[] = [
 ];
 
 interface UserManagementPageProps {
-  darkMode?: boolean;
   users?: User[];
   onUsersChange?: (users: User[]) => void;
 }
-
-export function UserManagementPage({ darkMode = false, users: externalUsers, onUsersChange }: UserManagementPageProps) {
+export function UserManagementPage({ users: externalUsers, onUsersChange }: UserManagementPageProps) {
   const [users, setUsers] = useState<User[]>(externalUsers || initialUsers);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -365,9 +363,9 @@ export function UserManagementPage({ darkMode = false, users: externalUsers, onU
     <div className="p-6 space-y-6">
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className={darkMode ? 'bg-gray-800 border-gray-700' : ''}>
+        <Card>
           <CardHeader className="pb-2">
-            <CardTitle className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Total Users</CardTitle>
+            <CardTitle className="text-sm text-gray-600">Total Users</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl" style={{ color: LINE_GREEN }}>
@@ -375,9 +373,9 @@ export function UserManagementPage({ darkMode = false, users: externalUsers, onU
             </div>
           </CardContent>
         </Card>
-        <Card className={darkMode ? 'bg-gray-800 border-gray-700' : ''}>
+        <Card>
           <CardHeader className="pb-2">
-            <CardTitle className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Active Users</CardTitle>
+            <CardTitle className="text-sm text-gray-600">Active Users</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl text-green-600">
@@ -385,9 +383,9 @@ export function UserManagementPage({ darkMode = false, users: externalUsers, onU
             </div>
           </CardContent>
         </Card>
-        <Card className={darkMode ? 'bg-gray-800 border-gray-700' : ''}>
+        <Card>
           <CardHeader className="pb-2">
-            <CardTitle className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Inactive Users</CardTitle>
+            <CardTitle className="text-sm text-gray-600">Inactive Users</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl text-gray-600">
@@ -395,9 +393,9 @@ export function UserManagementPage({ darkMode = false, users: externalUsers, onU
             </div>
           </CardContent>
         </Card>
-        <Card className={darkMode ? 'bg-gray-800 border-gray-700' : ''}>
+        <Card>
           <CardHeader className="pb-2">
-            <CardTitle className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Admins</CardTitle>
+            <CardTitle className="text-sm text-gray-600">Admins</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl text-purple-600">
@@ -417,13 +415,13 @@ export function UserManagementPage({ darkMode = false, users: externalUsers, onU
               setSearchTerm(e.target.value);
               setCurrentPage(1);
             }}
-            className={`flex-1 ${darkMode ? 'bg-gray-800 border-gray-700 text-gray-100' : ''}`}
+            className={`flex-1`}
           />
           <Select value={statusFilter} onValueChange={(value) => {
             setStatusFilter(value);
             setCurrentPage(1);
           }}>
-            <SelectTrigger className={`w-[180px] ${darkMode ? 'bg-gray-800 border-gray-700 text-gray-100' : ''}`}>
+            <SelectTrigger className={`w-[180px]`}>
               <SelectValue placeholder="Filter by status" />
             </SelectTrigger>
             <SelectContent>
@@ -436,7 +434,7 @@ export function UserManagementPage({ darkMode = false, users: externalUsers, onU
             setPositionFilter(value);
             setCurrentPage(1);
           }}>
-            <SelectTrigger className={`w-[180px] ${darkMode ? 'bg-gray-800 border-gray-700 text-gray-100' : ''}`}>
+            <SelectTrigger className={`w-[180px]`}>
               <SelectValue placeholder="Filter by position" />
             </SelectTrigger>
             <SelectContent>
@@ -454,11 +452,11 @@ export function UserManagementPage({ darkMode = false, users: externalUsers, onU
       </div>
 
       {/* Selection Indicator */}
-      {selectedRows.size > 0 && (
+        {selectedRows.size > 0 && (
         <div
           className="flex items-center justify-between px-4 py-3 rounded-lg border"
           style={{ 
-            backgroundColor: darkMode ? '#1a4d2e' : '#f0fdf4', 
+            backgroundColor: '#f0fdf4',
             borderColor: LINE_GREEN 
           }}
         >
@@ -482,7 +480,7 @@ export function UserManagementPage({ darkMode = false, users: externalUsers, onU
             variant="ghost"
             size="sm"
             onClick={clearSelection}
-            className={darkMode ? 'hover:bg-gray-700' : 'hover:bg-green-100'}
+            className={'hover:bg-green-100'}
           >
             <X className="h-4 w-4 mr-1" />
             Clear Selection
@@ -491,12 +489,12 @@ export function UserManagementPage({ darkMode = false, users: externalUsers, onU
       )}
 
       {/* Table */}
-      <Card className={darkMode ? 'bg-gray-800 border-gray-700' : ''}>
+      <Card>
         <CardContent className="p-0">
           <div className="overflow-x-auto" ref={tableRef}>
             <Table>
               <TableHeader>
-                <TableRow className={darkMode ? 'border-gray-700' : ''}>
+                <TableRow>
                   <TableHead className="w-[50px]">
                     <div className="flex items-center gap-2">
                       <Checkbox
@@ -597,14 +595,10 @@ export function UserManagementPage({ darkMode = false, users: externalUsers, onU
                   const isHovered = hoveredRow === user.id;
                   const showCheckbox = isSelected || isHovered;
                   
-                  return (
+                    return (
                     <TableRow
                       key={user.id}
-                      className={`${
-                        isSelected ? (darkMode ? 'bg-gray-700' : 'bg-green-50') : ''
-                      } ${isHovered ? (darkMode ? 'bg-gray-750' : 'bg-gray-50') : ''} ${
-                        darkMode ? 'border-gray-700' : ''
-                      } transition-colors cursor-pointer`}
+                      className={`${isSelected ? 'bg-green-50' : ''} ${isHovered ? 'bg-gray-50' : ''} transition-colors cursor-pointer`}
                       onMouseEnter={() => setHoveredRow(user.id)}
                       onMouseLeave={() => setHoveredRow(null)}
                       onClick={(e) => handleRowClick(user.id, e)}
@@ -671,7 +665,7 @@ export function UserManagementPage({ darkMode = false, users: externalUsers, onU
       {/* Pagination */}
       {itemsPerPage !== 'all' && totalPages > 1 && (
         <div className="flex items-center justify-between">
-          <div className="text-sm text-gray-600 dark:text-gray-400">
+          <div className="text-sm text-gray-600">
             Showing {((currentPage - 1) * (itemsPerPage as number)) + 1} to {Math.min(currentPage * (itemsPerPage as number), filteredUsers.length)} of {filteredUsers.length} users
           </div>
           <div className="flex items-center gap-2">
@@ -700,7 +694,7 @@ export function UserManagementPage({ darkMode = false, users: externalUsers, onU
 
       {/* Add/Edit User Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className={darkMode ? 'bg-gray-800 text-gray-100' : ''}>
+        <DialogContent>
           <DialogHeader>
             <DialogTitle>{editingUser ? 'Edit User' : 'Add New User'}</DialogTitle>
             <DialogDescription>
@@ -715,7 +709,7 @@ export function UserManagementPage({ darkMode = false, users: externalUsers, onU
                 type="email"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className={darkMode ? 'bg-gray-700 border-gray-600' : ''}
+                className=""
               />
             </div>
             <div className="space-y-2">
@@ -724,7 +718,7 @@ export function UserManagementPage({ darkMode = false, users: externalUsers, onU
                 id="name"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className={darkMode ? 'bg-gray-700 border-gray-600' : ''}
+                className=""
               />
             </div>
             <div className="space-y-2">
@@ -734,14 +728,14 @@ export function UserManagementPage({ darkMode = false, users: externalUsers, onU
                 type="password"
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                className={darkMode ? 'bg-gray-700 border-gray-600' : ''}
+                className=""
                 placeholder={editingUser ? "Leave blank to keep current password" : "Enter password"}
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="status">Status</Label>
               <Select value={formData.status} onValueChange={(value) => setFormData({ ...formData, status: value as 'active' | 'inactive' })}>
-                <SelectTrigger className={darkMode ? 'bg-gray-700 border-gray-600' : ''}>
+                <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -753,7 +747,7 @@ export function UserManagementPage({ darkMode = false, users: externalUsers, onU
             <div className="space-y-2">
               <Label htmlFor="position">Position</Label>
               <Select value={formData.position} onValueChange={(value) => setFormData({ ...formData, position: value as User['position'] })}>
-                <SelectTrigger className={darkMode ? 'bg-gray-700 border-gray-600' : ''}>
+                <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>

@@ -12,13 +12,13 @@ export function MainPage({ inventoryComponent }: MainPageProps) {
   const [activeTab, setActiveTab] = useState('inventory');
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-gray-50">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-20">
+        <div className="bg-white border-b border-gray-200 sticky top-0 z-20">
           <TabsList className="w-full justify-start rounded-none bg-transparent h-auto p-0 border-b-0">
             <TabsTrigger
               value="inventory"
-              className="data-[state=active]:border-b-2 rounded-none px-6 py-4 data-[state=inactive]:text-gray-600 dark:data-[state=inactive]:text-gray-400"
+              className="data-[state=active]:border-b-2 rounded-none px-6 py-4 data-[state=inactive]:text-gray-600"
               style={{
                 borderColor: activeTab === 'inventory' ? LINE_GREEN : 'transparent',
                 color: activeTab === 'inventory' ? LINE_GREEN : undefined,
@@ -28,7 +28,7 @@ export function MainPage({ inventoryComponent }: MainPageProps) {
             </TabsTrigger>
             <TabsTrigger
               value="stock"
-              className="data-[state=active]:border-b-2 rounded-none px-6 py-4 data-[state=inactive]:text-gray-600 dark:data-[state=inactive]:text-gray-400"
+              className="data-[state=active]:border-b-2 rounded-none px-6 py-4 data-[state=inactive]:text-gray-600"
               style={{
                 borderColor: activeTab === 'stock' ? LINE_GREEN : 'transparent',
                 color: activeTab === 'stock' ? LINE_GREEN : undefined,
@@ -38,7 +38,7 @@ export function MainPage({ inventoryComponent }: MainPageProps) {
             </TabsTrigger>
             <TabsTrigger
               value="reports"
-              className="data-[state=active]:border-b-2 rounded-none px-6 py-4 data-[state=inactive]:text-gray-600 dark:data-[state=inactive]:text-gray-400"
+              className="data-[state=active]:border-b-2 rounded-none px-6 py-4 data-[state=inactive]:text-gray-600"
               style={{
                 borderColor: activeTab === 'reports' ? LINE_GREEN : 'transparent',
                 color: activeTab === 'reports' ? LINE_GREEN : undefined,
@@ -67,8 +67,8 @@ export function MainPage({ inventoryComponent }: MainPageProps) {
                   />
                 </div>
               </div>
-              <h2 className="text-2xl text-gray-900 dark:text-gray-100">Under Maintenance</h2>
-              <p className="text-gray-600 dark:text-gray-400 max-w-md">
+              <h2 className="text-2xl text-gray-900">Under Maintenance</h2>
+              <p className="text-gray-600 max-w-md">
                 This feature is currently under development. Please check back later.
               </p>
             </div>
@@ -89,8 +89,8 @@ export function MainPage({ inventoryComponent }: MainPageProps) {
                   />
                 </div>
               </div>
-              <h2 className="text-2xl text-gray-900 dark:text-gray-100">Under Maintenance</h2>
-              <p className="text-gray-600 dark:text-gray-400 max-w-md">
+              <h2 className="text-2xl text-gray-900">Under Maintenance</h2>
+              <p className="text-gray-600 max-w-md">
                 This feature is currently under development. Please check back later.
               </p>
             </div>
