@@ -84,89 +84,7 @@ interface ArchivedReport {
   notes: string;
 }
 
-// Sample data
-const generateSampleCards = (monthYear: string): AssetCard[] => [
-  {
-    id: '1',
-    assetType: 'Laptop',
-    make: 'Dell',
-    model: 'Latitude 5420',
-    onStock: 15,
-    issued: 45,
-    retired: 5,
-    maintenance: 3,
-    total: 68,
-    monthYear,
-  },
-  {
-    id: '2',
-    assetType: 'Monitor',
-    make: 'Samsung',
-    model: 'S24E450',
-    onStock: 25,
-    issued: 60,
-    retired: 8,
-    maintenance: 2,
-    total: 95,
-    monthYear,
-  },
-  {
-    id: '3',
-    assetType: 'Keyboard',
-    make: 'Logitech',
-    model: 'K120',
-    onStock: 40,
-    issued: 80,
-    retired: 15,
-    maintenance: 5,
-    total: 140,
-    monthYear,
-  },
-  {
-    id: '4',
-    assetType: 'Mouse',
-    make: 'Logitech',
-    model: 'M90',
-    onStock: 50,
-    issued: 90,
-    retired: 20,
-    maintenance: 4,
-    total: 164,
-    monthYear,
-  },
-  {
-    id: '5',
-    assetType: 'Headset',
-    make: 'Jabra',
-    model: 'Evolve 40',
-    onStock: 20,
-    issued: 55,
-    retired: 10,
-    maintenance: 5,
-    total: 90,
-    monthYear,
-  },
-];
-
-const generateArchivedReports = (): ArchivedReport[] => {
-  const months = [
-    'October 2024',
-    'September 2024',
-    'August 2024',
-    'July 2024',
-    'June 2024',
-    'May 2024',
-  ];
-  
-  return months.map((month, index) => ({
-    id: `archive-${index}`,
-    monthYear: month,
-    lastUpdated: new Date(2024, 10 - index, 28).toISOString(),
-    editedBy: index % 2 === 0 ? 'Admin User' : undefined,
-    cards: generateSampleCards(month),
-    notes: `Monthly report for ${month}. All assets accounted for.`,
-  }));
-};
+// Generated from real inventory data when available
 
 interface MonthlyReportsPageProps {
   assets?: any[]; // Real inventory assets
@@ -247,7 +165,7 @@ export function MonthlyReportsPage({ assets = [], accessories = [] }: MonthlyRep
   };
   
   const [assetCards, setAssetCards] = useState<AssetCard[]>(() => generateCardsFromInventory(currentMonthYear));
-  const [archivedReports, setArchivedReports] = useState<ArchivedReport[]>(generateArchivedReports());
+  const [archivedReports, setArchivedReports] = useState<ArchivedReport[]>([]);
   const [selectedMonthYear, setSelectedMonthYear] = useState(currentMonthYear);
   const [reportType, setReportType] = useState<'monthly' | 'quarterly' | 'yearly' | 'custom'>('monthly');
   const [customDateRange, setCustomDateRange] = useState({ from: '', to: '' });
@@ -310,15 +228,8 @@ export function MonthlyReportsPage({ assets = [], accessories = [] }: MonthlyRep
     { name: 'Retired', value: globalSummary.totalRetired, color: STATUS_COLORS.retired },
   ];
 
-  // Trend data (mock month-over-month)
-  const trendData = [
-    { month: 'Jun', onStock: 140, issued: 300, maintenance: 15, retired: 48 },
-    { month: 'Jul', onStock: 145, issued: 310, maintenance: 18, retired: 50 },
-    { month: 'Aug', onStock: 148, issued: 320, maintenance: 16, retired: 53 },
-    { month: 'Sep', onStock: 150, issued: 325, maintenance: 19, retired: 58 },
-    { month: 'Oct', onStock: 145, issued: 330, maintenance: 17, retired: 60 },
-    { month: 'Nov', onStock: globalSummary.totalOnStock, issued: globalSummary.totalIssued, maintenance: globalSummary.totalMaintenance, retired: globalSummary.totalRetired },
-  ];
+  // Trend data (no hardcoded/mock values) — derive from archived reports or leave empty
+  const trendData: { month: string; onStock: number; issued: number; maintenance: number; retired: number }[] = [];
 
   // Export functions
   const exportToCSV = (data: AssetCard[], filename: string) => {

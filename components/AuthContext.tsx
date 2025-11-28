@@ -19,23 +19,8 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Mock user database (in a real app, this would be in a backend)
-const mockUsers: Array<User & { password: string }> = [
-  {
-    id: '1',
-    username: 'admin',
-    email: 'admin@example.com',
-    password: 'admin123',
-    role: 'Admin',
-  },
-  {
-    id: '2',
-    username: 'ituser',
-    email: 'it@example.com',
-    password: 'it123',
-    role: 'IT/OJT',
-  },
-];
+// User database (backend integration required)
+let mockUsers: Array<User & { password: string }> = [];
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(() => {

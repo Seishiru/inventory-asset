@@ -127,18 +127,6 @@ export function LoginDialog({ open, onOpenChange, onSwitchToSignup }: LoginDialo
             </button>
           </div>
 
-          {/* Demo credentials */}
-          <div className="mt-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
-            <p className="text-xs text-gray-600 mb-2">Demo credentials:</p>
-            <div className="text-xs space-y-1">
-              <div>
-                <strong>Admin:</strong> admin / admin123
-              </div>
-              <div>
-                <strong>IT/OJT:</strong> ituser / it123
-              </div>
-            </div>
-          </div>
         </form>
         </DialogPrimitive.Content>
       </DialogPrimitive.Portal>

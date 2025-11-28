@@ -239,9 +239,9 @@ export function AssetDialog({ open, onClose, onSave, onDelete, onDuplicate, curr
                           </SelectItem>
                         ))
                       ) : (
-                        <SelectItem value="" disabled>
+                        <div className="px-2 py-1.5 text-xs text-muted-foreground">
                           No asset types available. Add asset types in Settings.
-                        </SelectItem>
+                        </div>
                       )}
                     </SelectContent>
                   </Select>
@@ -264,9 +264,9 @@ export function AssetDialog({ open, onClose, onSave, onDelete, onDuplicate, curr
                           </SelectItem>
                         ))
                       ) : (
-                        <SelectItem value="" disabled>
+                        <div className="px-2 py-1.5 text-xs text-muted-foreground">
                           No brands available. Add brands in Settings.
-                        </SelectItem>
+                        </div>
                       )}
                     </SelectContent>
                   </Select>

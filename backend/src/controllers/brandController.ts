@@ -15,16 +15,16 @@ export const createBrand = async (req: Request, res: Response) => {
   try {
     const { name } = req.body;
     if (!name) return res.status(400).json({ error: "Brand name is required" });
-    
+
     const brand = await BrandService.createBrand(name);
     res.status(201).json(brand);
   } catch (err: any) {
     if (err.message.includes("already exists")) {
       res.status(409).json({ error: err.message });
     } else {
-      res.status(400).json({ error: err.message || "Bad request" });
-    }
-  }
+      res.status(400).json({ error: err.message || "Bad request" }); // ← ADD THIS LINE
+    } // ← ADD THIS CLOSING BRACE
+  } // ← AND THIS ONE
 };
 
 export const deleteBrand = async (req: Request, res: Response) => {

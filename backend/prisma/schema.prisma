@@ -32,7 +32,7 @@ model Asset {
   serialNumber String    @unique
   barcode      String?   @unique
   description  String?
-  status       String    @default("Active")
+  status       String    @default("On-Stock")
   location     String
   userName     String
   createdBy    String
@@ -56,4 +56,36 @@ model Brand {
   name String @unique
   
   @@map("brands")
+}
+
+model Accessory {
+  id           String    @id @default(cuid())
+  index        Int       @default(autoincrement()) @unique
+  assetType    String
+  modelNumber  String?
+  brandMake    String?
+  barcode      String?   @unique
+  serialNumber String?
+  quantity     Int       @default(0)
+  status       String    @default("On-Stock")
+  userName     String?
+  location     String?
+  comments     Json?
+  originalId   String?
+  auditLog     Json?
+  dateCreated  DateTime  @default(now())
+  lastUpdated  DateTime  @updatedAt
+
+  @@map("accessories")
+}
+
+model ActivityLog {
+  id        Int      @id @default(autoincrement())
+  type      String
+  username  String
+  action    String
+  details   String?
+  timestamp DateTime @default(now())
+
+  @@map("activity_log")
 }

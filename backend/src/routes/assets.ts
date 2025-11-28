@@ -2,9 +2,8 @@
 import { Router } from "express";
 import * as AssetsController from "../controllers/assetsController";
 
-const router = Router();
+const router = Router(); // ← ADD THIS MISSING LINE
 
-// CRUD + Additional routes
 router.get("/", AssetsController.getAssets);
 router.get("/:id", AssetsController.getAssetById);
 router.post("/", AssetsController.createAsset);

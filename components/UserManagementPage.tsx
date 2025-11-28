@@ -32,82 +32,19 @@ export interface User {
   lastLogin?: string;
 }
 
-// Placeholder data
-const initialUsers: User[] = [
-  {
-    id: '1',
-    index: 0,
-    email: 'admin@company.com',
-    name: 'Admin User',
-    password: 'admin123',
-    status: 'active',
-    position: 'SAdmin',
-    createdAt: new Date('2024-01-15').toISOString(),
-    lastLogin: new Date('2024-11-26').toISOString(),
-  },
-  {
-    id: '2',
-    index: 1,
-    email: 'john.tech@company.com',
-    name: 'John Doe',
-    password: 'pass1234',
-    status: 'active',
-    position: 'ITech',
-    createdAt: new Date('2024-02-20').toISOString(),
-    lastLogin: new Date('2024-11-25').toISOString(),
-  },
-  {
-    id: '3',
-    index: 2,
-    email: 'jane.agent@company.com',
-    name: 'Jane Smith',
-    password: 'pass5678',
-    status: 'active',
-    position: 'Agent',
-    createdAt: new Date('2024-03-10').toISOString(),
-    lastLogin: new Date('2024-11-24').toISOString(),
-  },
-  {
-    id: '4',
-    index: 3,
-    email: 'mike.cs@company.com',
-    name: 'Mike Johnson',
-    password: 'pass9012',
-    status: 'inactive',
-    position: 'CSagent',
-    createdAt: new Date('2024-04-05').toISOString(),
-    lastLogin: new Date('2024-10-15').toISOString(),
-  },
-  {
-    id: '5',
-    index: 4,
-    email: 'sarah.sales@company.com',
-    name: 'Sarah Williams',
-    password: 'pass3456',
-    status: 'active',
-    position: 'SAgent',
-    createdAt: new Date('2024-05-12').toISOString(),
-    lastLogin: new Date('2024-11-26').toISOString(),
-  },
-  {
-    id: '6',
-    index: 5,
-    email: 'tom.lead@company.com',
-    name: 'Tom Anderson',
-    password: 'pass7890',
-    status: 'active',
-    position: 'TLCSales',
-    createdAt: new Date('2024-06-18').toISOString(),
-    lastLogin: new Date('2024-11-26').toISOString(),
-  },
-];
+// Users are loaded from `externalUsers` prop or from localStorage.
+// Removed hardcoded placeholder/demo users so the app starts with real data only.
 
 interface UserManagementPageProps {
   users?: User[];
   onUsersChange?: (users: User[]) => void;
 }
 export function UserManagementPage({ users: externalUsers, onUsersChange }: UserManagementPageProps) {
-  const [users, setUsers] = useState<User[]>(externalUsers || initialUsers);
+  const [users, setUsers] = useState<User[]>(() => {
+    if (externalUsers && externalUsers.length) return externalUsers;
+    const saved = localStorage.getItem('users');
+    return saved ? JSON.parse(saved) : [];
+  });
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [positionFilter, setPositionFilter] = useState('all');
@@ -155,6 +92,15 @@ export function UserManagementPage({ users: externalUsers, onUsersChange }: User
       onUsersChange(users);
     }
   }, [users, onUsersChange]);
+
+  // Persist users to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem('users', JSON.stringify(users));
+    } catch (e) {
+      // ignore storage errors
+    }
+  }, [users]);
 
   // Filter users
   let filteredUsers = users.filter((user) => {
