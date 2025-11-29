@@ -1,8 +1,9 @@
-import { X, Clock, User, Activity } from 'lucide-react';
+import { X, Clock, User, Activity, RefreshCw } from 'lucide-react';
 import { Button } from './ui/button';
 import { ScrollArea } from './ui/scroll-area';
 import { Badge } from './ui/badge';
 import { Separator } from './ui/separator';
+import { useState, useEffect } from 'react';
 
 const LINE_GREEN = '#06C755';
 
@@ -18,14 +19,65 @@ export interface ActivityLogEntry {
 interface ActivityLogPageProps {
   open: boolean;
   onClose: () => void;
-  activities: ActivityLogEntry[];
+  activities?: ActivityLogEntry[];
 }
 
 export function ActivityLogPage({
   open,
   onClose,
-  activities,
+  activities: externalActivities,
 }: ActivityLogPageProps) {
+  const [activities, setActivities] = useState<ActivityLogEntry[]>(externalActivities || []);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    console.log('🔄 [ActivityLog] useEffect triggered - open:', open, 'externalActivities:', externalActivities);
+    if (open) {
+      if (externalActivities) {
+        console.log('📥 [ActivityLog] Using external activities:', externalActivities);
+        setActivities(externalActivities);
+      } else {
+        console.log('🌐 [ActivityLog] No external activities, fetching from backend...');
+        loadActivities();
+      }
+    }
+  }, [open, externalActivities]);
+
+  const loadActivities = async () => {
+    try {
+      setLoading(true);
+      console.log('🔍 [ActivityLog] Fetching from http://localhost:4000/activity-log');
+      const response = await fetch('http://localhost:4000/activity-log');
+      console.log('📡 [ActivityLog] Response status:', response.status, response.statusText);
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('📦 [ActivityLog] Raw data from backend:', data);
+        console.log('📊 [ActivityLog] Number of logs:', data.length);
+        
+        const mappedActivities = data.map((log: any) => ({
+          id: String(log.id),
+          timestamp: new Date(log.timestamp),
+          username: log.username,
+          action: log.action,
+          details: log.details,
+          type: log.type,
+        }));
+        
+        console.log('✅ [ActivityLog] Mapped activities:', mappedActivities);
+        setActivities(mappedActivities);
+      } else {
+        console.error('❌ [ActivityLog] Failed to fetch:', response.status, response.statusText);
+        const errorText = await response.text();
+        console.error('❌ [ActivityLog] Error response:', errorText);
+      }
+    } catch (error) {
+      console.error('❌ [ActivityLog] Error loading activities:', error);
+    } finally {
+      setLoading(false);
+      console.log('🏁 [ActivityLog] Fetch complete');
+    }
+  };
   const getActivityColor = (type: ActivityLogEntry['type']) => {
     switch (type) {
       case 'create':
@@ -116,14 +168,26 @@ export function ActivityLogPage({
                 </p>
               </div>
             </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onClose}
-              className="h-10 w-10 p-0 hover:bg-gray-100"
-            >
-              <X className="h-5 w-5" />
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={loadActivities}
+                disabled={loading}
+                className="h-10 px-3 hover:bg-gray-100"
+              >
+                <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+                Refresh
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onClose}
+                className="h-10 w-10 p-0 hover:bg-gray-100"
+              >
+                <X className="h-5 w-5" />
+              </Button>
+            </div>
           </div>
 
           {/* Stats Bar */}
@@ -147,7 +211,14 @@ export function ActivityLogPage({
 
           {/* Activity List */}
           <ScrollArea className="flex-1 px-6 py-4">
-            {activities.length === 0 ? (
+            {loading ? (
+              <div className="flex flex-col items-center justify-center h-full">
+                <RefreshCw className="h-16 w-16 mb-4 text-gray-300 animate-spin" />
+                <p className="text-lg text-gray-600">
+                  Loading activities...
+                </p>
+              </div>
+            ) : activities.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full">
                 <Activity className="h-16 w-16 mb-4 text-gray-300" />
                 <p className="text-lg text-gray-600">

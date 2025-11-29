@@ -80,7 +80,11 @@ export function AccessoriesDialog({
         status: accessory.status,
         userName: accessory.userName || '',
         location: accessory.location || '',
-        comments: accessory.comments || '',
+        comments: typeof accessory.comments === 'string'
+          ? accessory.comments
+          : Array.isArray(accessory.comments)
+            ? accessory.comments.join('\n')
+            : (accessory.comments ? String(accessory.comments) : ''),
       });
       setAttachments(accessory.attachments || []);
     } else {
@@ -131,17 +135,18 @@ export function AccessoriesDialog({
     }
 
     // Auto-generate barcode if not provided
-    const finalBarcode = formData.barcode.trim() || `ACC-${Date.now()}`;
+    const finalBarcode = (typeof formData.barcode === 'string' ? formData.barcode.trim() : '') || `ACC-${Date.now()}`;
 
+    const safeComments = typeof formData.comments === 'string' ? formData.comments.trim() : undefined;
     onSave({
       ...formData,
       barcode: finalBarcode,
-      modelNumber: formData.modelNumber.trim() || 'N/A',
+      modelNumber: (typeof formData.modelNumber === 'string' ? formData.modelNumber.trim() : '') || 'N/A',
       brandMake: formData.brandMake || 'N/A',
-      serialNumber: formData.serialNumber.trim() || 'N/A',
+      serialNumber: (typeof formData.serialNumber === 'string' ? formData.serialNumber.trim() : '') || 'N/A',
       userName: formData.userName || undefined,
-      location: formData.location.trim() || 'N/A',
-      comments: formData.comments.trim() || undefined,
+      location: (typeof formData.location === 'string' ? formData.location.trim() : '') || 'N/A',
+      comments: safeComments || undefined,
       attachments: attachments.length > 0 ? attachments : undefined,
     });
   };

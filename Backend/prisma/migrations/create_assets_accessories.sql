@@ -1,0 +1,34 @@
+-- Create assets table
+CREATE TABLE IF NOT EXISTS `assets` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `assetTag` VARCHAR(100) NULL,
+  `serialNumber` VARCHAR(100) NULL,
+  `brand` VARCHAR(100) NULL,
+  `model` VARCHAR(100) NULL,
+  `category` VARCHAR(100) NULL,
+  `status` VARCHAR(50) NULL,
+  `assignedTo` VARCHAR(100) NULL,
+  `location` VARCHAR(100) NULL,
+  `purchaseDate` DATETIME NULL,
+  `purchasePrice` DECIMAL(10,2) NULL,
+  `warrantyExpiry` DATETIME NULL,
+  `notes` TEXT NULL,
+  `createdAt` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updatedAt` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Create accessories table
+CREATE TABLE IF NOT EXISTS `accessories` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `name` VARCHAR(200) NOT NULL,
+  `type` VARCHAR(100) NULL,
+  `brand` VARCHAR(100) NULL,
+  `model` VARCHAR(100) NULL,
+  `quantity` INT NOT NULL DEFAULT 0,
+  `location` VARCHAR(100) NULL,
+  `notes` TEXT NULL,
+  `createdAt` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updatedAt` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

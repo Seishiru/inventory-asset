@@ -3,7 +3,7 @@ import { createContext, useContext, useState, ReactNode } from 'react';
 export type UserRole = 'Admin' | 'IT/OJT';
 
 export interface User {
-  id: string;
+  id: number;
   username: string;
   role: UserRole;
   email: string;
@@ -19,8 +19,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// User database (backend integration required)
-let mockUsers: Array<User & { password: string }> = [];
+const API_URL = 'http://localhost:4000';
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(() => {
@@ -30,21 +29,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   });
 
   const login = async (username: string, password: string): Promise<boolean> => {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    const foundUser = mockUsers.find(
-      u => u.username === username && u.password === password
-    );
+    try {
+      const response = await fetch(`${API_URL}/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ username, password }),
+      });
 
-    if (foundUser) {
-      const { password: _, ...userWithoutPassword } = foundUser;
-      setUser(userWithoutPassword);
-      localStorage.setItem('currentUser', JSON.stringify(userWithoutPassword));
-      return true;
+      if (!response.ok) {
+        return false;
+      }
+
+      const data = await response.json();
+      
+      if (data.success && data.user) {
+        setUser(data.user);
+        localStorage.setItem('currentUser', JSON.stringify(data.user));
+        return true;
+      }
+      
+      return false;
+    } catch (error) {
+      console.error('Login error:', error);
+      return false;
     }
-    
-    return false;
   };
 
   const signup = async (
@@ -53,29 +63,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     password: string,
     role: UserRole
   ): Promise<boolean> => {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    // Check if user already exists
-    if (mockUsers.some(u => u.username === username || u.email === email)) {
+    try {
+      const response = await fetch(`${API_URL}/auth/signup`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ username, email, password, role }),
+      });
+
+      if (!response.ok) {
+        return false;
+      }
+
+      const data = await response.json();
+      
+      if (data.success && data.user) {
+        setUser(data.user);
+        localStorage.setItem('currentUser', JSON.stringify(data.user));
+        return true;
+      }
+      
+      return false;
+    } catch (error) {
+      console.error('Signup error:', error);
       return false;
     }
-
-    const newUser = {
-      id: String(mockUsers.length + 1),
-      username,
-      email,
-      password,
-      role,
-    };
-
-    mockUsers.push(newUser);
-    
-    const { password: _, ...userWithoutPassword } = newUser;
-    setUser(userWithoutPassword);
-    localStorage.setItem('currentUser', JSON.stringify(userWithoutPassword));
-    
-    return true;
   };
 
   const logout = () => {

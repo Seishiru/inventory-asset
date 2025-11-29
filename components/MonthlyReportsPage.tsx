@@ -177,6 +177,7 @@ export function MonthlyReportsPage({ assets = [], accessories = [] }: MonthlyRep
   const [viewMode, setViewMode] = useState<'current' | 'archive'>('current');
   const [editingArchive, setEditingArchive] = useState<ArchivedReport | null>(null);
   const [archiveDialogOpen, setArchiveDialogOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
   const cardRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
 
   // Calculate global summary
@@ -209,8 +210,8 @@ export function MonthlyReportsPage({ assets = [], accessories = [] }: MonthlyRep
   });
 
   // Get unique values for filters
-  const assetTypes = Array.from(new Set(assetCards.map((c) => c.assetType)));
-  const brands = Array.from(new Set(assetCards.map((c) => c.make)));
+  const assetTypes = Array.from(new Set(assetCards.map((c) => c.assetType))).filter(t => t && t.trim() !== '');
+  const brands = Array.from(new Set(assetCards.map((c) => c.make))).filter(b => b && b.trim() !== '');
 
   // Chart data
   const barChartData = filteredCards.map((card) => ({
@@ -477,6 +478,61 @@ export function MonthlyReportsPage({ assets = [], accessories = [] }: MonthlyRep
     return <Minus className="h-4 w-4 text-gray-500" />;
   };
 
+  // Archive current report to backend
+  const archiveCurrentReport = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('http://localhost:4000/monthly-report/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        toast.success(`Report archived successfully for ${selectedMonthYear}`);
+        // Refresh archived reports list
+        loadArchivedReports();
+      } else {
+        const error = await response.json();
+        toast.error(`Failed to archive report: ${error.error || 'Unknown error'}`);
+      }
+    } catch (error) {
+      console.error('Error archiving report:', error);
+      toast.error('Failed to archive report');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Load archived reports from backend
+  const loadArchivedReports = async () => {
+    try {
+      const response = await fetch('http://localhost:4000/monthly-report');
+      if (response.ok) {
+        const reports = await response.json();
+        // Map backend reports to frontend format
+        const mappedReports: ArchivedReport[] = reports.map((report: any) => ({
+          id: String(report.id),
+          monthYear: new Date(report.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
+          lastUpdated: report.updatedAt || report.createdAt,
+          editedBy: 'System',
+          cards: [], // Backend doesn't store individual cards, only summary
+          notes: '',
+        }));
+        setArchivedReports(mappedReports);
+      }
+    } catch (error) {
+      console.error('Error loading archived reports:', error);
+    }
+  };
+
+  // Load archived reports on mount when viewing archive
+  useState(() => {
+    if (viewMode === 'archive') {
+      loadArchivedReports();
+    }
+  });
+
   return (
     <div className="p-6 space-y-6 bg-gray-50">
       {/* Header */}
@@ -501,13 +557,27 @@ export function MonthlyReportsPage({ assets = [], accessories = [] }: MonthlyRep
             </Button>
             <Button
               variant={viewMode === 'archive' ? 'default' : 'outline'}
-              onClick={() => setViewMode('archive')}
+              onClick={() => {
+                setViewMode('archive');
+                loadArchivedReports();
+              }}
               style={viewMode === 'archive' ? { backgroundColor: LINE_GREEN } : {}}
               className={viewMode === 'archive' ? 'text-white' : ''}
             >
               <Archive className="h-4 w-4 mr-2" />
               Archive
             </Button>
+            {viewMode === 'current' && (
+              <Button
+                onClick={archiveCurrentReport}
+                disabled={loading}
+                style={{ backgroundColor: LINE_GREEN }}
+                className="text-white"
+              >
+                <Archive className="h-4 w-4 mr-2" />
+                {loading ? 'Archiving...' : 'Archive Current Report'}
+              </Button>
+            )}
           </div>
         </div>
       </div>

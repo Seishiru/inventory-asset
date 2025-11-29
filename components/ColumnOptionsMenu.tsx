@@ -21,6 +21,10 @@ interface ColumnOptionsMenuProps {
   onBrandOptionsChange: (options: string[]) => void;
   assetTypeOptions: string[];
   onAssetTypeOptionsChange: (options: string[]) => void;
+  onAddBrand?: (brandName: string) => Promise<void> | void;
+  onDeleteBrand?: (brandName: string) => Promise<void> | void;
+  onAddAssetType?: (assetType: string) => Promise<void> | void;
+  onDeleteAssetType?: (assetType: string) => Promise<void> | void;
 }
 
 export function ColumnOptionsMenu({
@@ -28,37 +32,102 @@ export function ColumnOptionsMenu({
   onBrandOptionsChange,
   assetTypeOptions,
   onAssetTypeOptionsChange,
+  onAddBrand,
+  onDeleteBrand,
+  onAddAssetType,
+  onDeleteAssetType,
 }: ColumnOptionsMenuProps) {
   const [open, setOpen] = useState(false);
   const [newBrand, setNewBrand] = useState('');
   const [newAssetType, setNewAssetType] = useState('');
 
   const addBrandOption = () => {
-    if (newBrand.trim() && !brandOptions.includes(newBrand.trim())) {
-      onBrandOptionsChange([...brandOptions, newBrand.trim()]);
-      setNewBrand('');
-      toast.success(`Added brand option: ${newBrand.trim()}`);
-    } else if (brandOptions.includes(newBrand.trim())) {
+    const trimmed = newBrand.trim();
+    if (!trimmed) return;
+    if (brandOptions.includes(trimmed)) {
       toast.error('Brand option already exists');
+      return;
     }
+
+    // Prefer backend handler when available
+    if (onAddBrand) {
+      Promise.resolve(onAddBrand(trimmed))
+        .then(() => {
+          onBrandOptionsChange([...brandOptions, trimmed]);
+          setNewBrand('');
+          toast.success(`Added brand option: ${trimmed}`);
+        })
+        .catch((err) => {
+          console.error('Failed to add brand via handler', err);
+          toast.error('Failed to add brand');
+        });
+      return;
+    }
+
+    onBrandOptionsChange([...brandOptions, trimmed]);
+    setNewBrand('');
+    toast.success(`Added brand option: ${trimmed}`);
   };
 
   const removeBrandOption = (brand: string) => {
+    if (onDeleteBrand) {
+      Promise.resolve(onDeleteBrand(brand))
+        .then(() => {
+          onBrandOptionsChange(brandOptions.filter((b) => b !== brand));
+          toast.success(`Removed brand option: ${brand}`);
+        })
+        .catch((err) => {
+          console.error('Failed to delete brand via handler', err);
+          toast.error('Failed to delete brand');
+        });
+      return;
+    }
+
     onBrandOptionsChange(brandOptions.filter((b) => b !== brand));
     toast.success(`Removed brand option: ${brand}`);
   };
 
   const addAssetTypeOption = () => {
-    if (newAssetType.trim() && !assetTypeOptions.includes(newAssetType.trim())) {
-      onAssetTypeOptionsChange([...assetTypeOptions, newAssetType.trim()]);
-      setNewAssetType('');
-      toast.success(`Added asset type: ${newAssetType.trim()}`);
-    } else if (assetTypeOptions.includes(newAssetType.trim())) {
+    const trimmed = newAssetType.trim();
+    if (!trimmed) return;
+    if (assetTypeOptions.includes(trimmed)) {
       toast.error('Asset type already exists');
+      return;
     }
+
+    if (onAddAssetType) {
+      Promise.resolve(onAddAssetType(trimmed))
+        .then(() => {
+          onAssetTypeOptionsChange([...assetTypeOptions, trimmed]);
+          setNewAssetType('');
+          toast.success(`Added asset type: ${trimmed}`);
+        })
+        .catch((err) => {
+          console.error('Failed to add asset type via handler', err);
+          toast.error('Failed to add asset type');
+        });
+      return;
+    }
+
+    onAssetTypeOptionsChange([...assetTypeOptions, trimmed]);
+    setNewAssetType('');
+    toast.success(`Added asset type: ${trimmed}`);
   };
 
   const removeAssetTypeOption = (assetType: string) => {
+    if (onDeleteAssetType) {
+      Promise.resolve(onDeleteAssetType(assetType))
+        .then(() => {
+          onAssetTypeOptionsChange(assetTypeOptions.filter((a) => a !== assetType));
+          toast.success(`Removed asset type: ${assetType}`);
+        })
+        .catch((err) => {
+          console.error('Failed to delete asset type via handler', err);
+          toast.error('Failed to delete asset type');
+        });
+      return;
+    }
+
     onAssetTypeOptionsChange(assetTypeOptions.filter((a) => a !== assetType));
     toast.success(`Removed asset type: ${assetType}`);
   };

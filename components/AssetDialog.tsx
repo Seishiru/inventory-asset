@@ -224,7 +224,7 @@ export function AssetDialog({ open, onClose, onSave, onDelete, onDuplicate, curr
                 <div className="space-y-2">
                   <Label htmlFor="assetType">Asset Type *</Label>
                   <Select
-                    value={formData.assetType}
+                    value={formData.assetType || ''}
                     onValueChange={(value) => setFormData({ ...formData, assetType: value })}
                     required
                   >
@@ -249,7 +249,7 @@ export function AssetDialog({ open, onClose, onSave, onDelete, onDuplicate, curr
                 <div className="space-y-2">
                   <Label htmlFor="brandMake">Brand/Make *</Label>
                   <Select
-                    value={formData.brandMake}
+                    value={formData.brandMake || ''}
                     onValueChange={(value) => setFormData({ ...formData, brandMake: value })}
                     required
                   >
@@ -324,8 +324,8 @@ export function AssetDialog({ open, onClose, onSave, onDelete, onDuplicate, curr
                 <div className="space-y-2">
                   <Label htmlFor="status">Status *</Label>
                   <Select
-                    value={formData.status}
-                    onValueChange={(value: Asset['status']) => setFormData({ ...formData, status: value })}
+                  value={formData.status || 'On-Stock'}
+                  onValueChange={(value: Asset['status']) => setFormData({ ...formData, status: value })}
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -355,7 +355,7 @@ export function AssetDialog({ open, onClose, onSave, onDelete, onDuplicate, curr
               <div className="space-y-2">
                 <Label htmlFor="userName">User Name *</Label>
                 <Select
-                  value={formData.userName}
+                  value={formData.userName || ''}
                   onValueChange={(value) => setFormData({ ...formData, userName: value })}
                 >
                   <SelectTrigger>

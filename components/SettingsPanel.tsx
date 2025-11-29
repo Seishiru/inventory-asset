@@ -1,16 +1,11 @@
 import { useState } from 'react';
 import { Button } from './ui/button';      
-import { Label } from './ui/label';        
-import { Input } from './ui/input';        
-import { Badge } from './ui/badge';        
-import { Separator } from './ui/separator';
+import { Badge } from './ui/badge';       
 import {
   X,
   Settings,
   LogOut,
   User,
-  Plus,
-  Trash2,
   Activity,
   Home,
 } from 'lucide-react';
@@ -32,13 +27,6 @@ const LINE_GREEN = '#06C755';
 interface SettingsPanelProps {
   open: boolean;
   onClose: () => void;
-  brandOptions: string[];
-  onBrandOptionsChange: (options: string[]) => void;
-  onAddBrand: (brandName: string) => void;
-  onDeleteBrand: (brandName: string) => void;
-  assetTypeOptions: string[];
-  onAssetTypeOptionsChange: (options: string[]) => void;
-  onAddAssetType: (assetType: string) => void;
   onActivityLogOpen: () => void;
   onGoBackToMainPage?: () => void;
 }
@@ -46,19 +34,12 @@ interface SettingsPanelProps {
 export function SettingsPanel({
   open,
   onClose,
-  brandOptions,
-  onAddBrand,
-  onDeleteBrand,
-  assetTypeOptions,
-  onAssetTypeOptionsChange,
-  onAddAssetType,
   onActivityLogOpen,
   onGoBackToMainPage,
 }: SettingsPanelProps) {
   const { user, logout } = useAuth();
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
-  const [newBrand, setNewBrand] = useState('');
-  const [newAssetType, setNewAssetType] = useState('');
+  
 
   const handleLogout = () => {
     logout();
@@ -66,41 +47,7 @@ export function SettingsPanel({
     toast.success('Logged out successfully');
     onClose();
   };
-
-  const handleAddBrand = async () => {
-    if (newBrand.trim() && !brandOptions.includes(newBrand.trim())) {
-      try {
-        await onAddBrand(newBrand.trim());
-        setNewBrand('');
-      } catch (error) {
-        toast.error('Failed to add brand');
-      }
-    } else if (brandOptions.includes(newBrand.trim())) {
-      toast.error('Brand option already exists');
-    }
-  };
-
-  const handleRemoveBrand = async (brand: string) => {
-    try {
-      await onDeleteBrand(brand);
-    } catch (error) {
-      toast.error('Failed to delete brand');
-    }
-  };
-
-  const handleAddAssetType = () => {
-    if (newAssetType.trim() && !assetTypeOptions.includes(newAssetType.trim())) {
-      onAddAssetType(newAssetType.trim());
-      setNewAssetType('');
-    } else if (assetTypeOptions.includes(newAssetType.trim())) {
-      toast.error('Asset type already exists');
-    }
-  };
-
-  const removeAssetTypeOption = (assetType: string) => {
-    onAssetTypeOptionsChange(assetTypeOptions.filter(a => a !== assetType));
-    toast.success(`Removed asset type: ${assetType}`);
-  };
+  
 
   return (
     <>
@@ -201,121 +148,7 @@ export function SettingsPanel({
               </Button>
             </div>
 
-            <Separator />
-
-            {/* Brand Management Section */}
-            <div className="space-y-3">
-              <h3 className="text-sm font-medium">Brand Management</h3>
-              
-              <div className="space-y-2">
-                <Label htmlFor="newBrand">Add New Brand</Label>
-                <div className="flex gap-2">
-                  <Input
-                    id="newBrand"
-                    value={newBrand}
-                    onChange={(e) => setNewBrand(e.target.value)}
-                    placeholder="Enter brand name"
-                    onKeyPress={(e) => {
-                      if (e.key === 'Enter') {
-                        handleAddBrand();
-                      }
-                    }}
-                  />
-                  <Button 
-                    onClick={handleAddBrand}
-                    size="sm"
-                    style={{ backgroundColor: LINE_GREEN }}
-                    className="text-white hover:opacity-90"
-                  >
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Available Brands</Label>
-                <div className="space-y-1 max-h-32 overflow-y-auto">
-                  {brandOptions.length === 0 ? (
-                    <p className="text-sm text-gray-500 text-center py-2">No brands added yet</p>
-                  ) : (
-                    brandOptions.map((brand) => (
-                      <div
-                        key={brand}
-                        className="flex items-center justify-between p-2 bg-gray-50 rounded text-sm"
-                      >
-                        <span>{brand}</span>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleRemoveBrand(brand)}
-                          className="h-6 w-6 p-0 hover:bg-red-50 hover:text-red-600"
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-            </div>
-
-            <Separator />
-
-            {/* Asset Type Management Section */}
-            <div className="space-y-3">
-              <h3 className="text-sm font-medium">Asset Type Management</h3>
-              
-              <div className="space-y-2">
-                <Label htmlFor="newAssetType">Add New Asset Type</Label>
-                <div className="flex gap-2">
-                  <Input
-                    id="newAssetType"
-                    value={newAssetType}
-                    onChange={(e) => setNewAssetType(e.target.value)}
-                    placeholder="Enter asset type"
-                    onKeyPress={(e) => {
-                      if (e.key === 'Enter') {
-                        handleAddAssetType();
-                      }
-                    }}
-                  />
-                  <Button 
-                    onClick={handleAddAssetType}
-                    size="sm"
-                    style={{ backgroundColor: LINE_GREEN }}
-                    className="text-white hover:opacity-90"
-                  >
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Available Asset Types</Label>
-                <div className="space-y-1 max-h-32 overflow-y-auto">
-                  {assetTypeOptions.length === 0 ? (
-                    <p className="text-sm text-gray-500 text-center py-2">No asset types added yet</p>
-                  ) : (
-                    assetTypeOptions.map((assetType) => (
-                      <div
-                        key={assetType}
-                        className="flex items-center justify-between p-2 bg-gray-50 rounded text-sm"
-                      >
-                        <span>{assetType}</span>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => removeAssetTypeOption(assetType)}
-                          className="h-6 w-6 p-0 hover:bg-red-50 hover:text-red-600"
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-            </div>
+            {/* (Brand and Asset Type management moved to ColumnOptionsMenu) */}
           </div>
         </div>
       </div>

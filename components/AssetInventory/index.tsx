@@ -10,7 +10,6 @@ import { StatusSelectionDialog } from '../StatusSelectionDialog';
 import { ActionDialog } from '../ActionDialog';
 import { SettingsPanel } from '../SettingsPanel';
 import { SettingsTab } from '../SettingsTab';
-import { ActivityLogPage } from '../ActivityLogPage';
 import { KeyboardShortcuts } from '../KeyboardShortcuts';
 import ColumnDialog from './ColumnDialog';
 import DeleteColumnDialog from './DeleteColumnDialog';
@@ -41,8 +40,8 @@ export default function AssetInventory({ onBackToLanding, onNavigateToActivityLo
   const [editingAccessory, setEditingAccessory] = useState<any>(undefined);
   const [statusSelectionOpen, setStatusSelectionOpen] = useState(false);
   const [actionDialogOpen, setActionDialogOpen] = useState(false);
-  const [requestingAccessory] = useState<any>(null);
-  const [selectedActionStatus] = useState<'On-Stock' | 'Reserve' | 'Issued' | 'Maintenance' | 'Retired'>('On-Stock');
+  const [requestingAccessory, setRequestingAccessory] = useState<any>(null);
+  const [selectedActionStatus, setSelectedActionStatus] = useState<'On-Stock' | 'Reserve' | 'Issued' | 'Maintenance' | 'Retired'>('On-Stock');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deletingAccessory] = useState<any>(null);
   const [settingsPanelOpen, setSettingsPanelOpen] = useState(false);
@@ -51,8 +50,6 @@ export default function AssetInventory({ onBackToLanding, onNavigateToActivityLo
   const [newColumnName, setNewColumnName] = useState('');
   const [deleteColumnDialogOpen, setDeleteColumnDialogOpen] = useState(false);
   const [columnToDelete, setColumnToDelete] = useState<string | null>(null);
-  const [activityLogOpen, setActivityLogOpen] = useState(false);
-  const [showMainPage, setShowMainPage] = useState(true);
 
   // Custom hooks
   const {
@@ -65,8 +62,10 @@ export default function AssetInventory({ onBackToLanding, onNavigateToActivityLo
     handleAddAsset,
     handleDeleteAsset,
     handleDuplicateAsset,
-    handleAddAccessory,
-    handleRequestAccessory,
+    handleUpdateAsset,
+      handleAddAccessory,
+      handleUpdateAccessory,
+    // handleRequestAccessory,
     handleStatusSelection,
     handleSubmitRequest,
     handleReturnAccessory,
@@ -75,7 +74,8 @@ export default function AssetInventory({ onBackToLanding, onNavigateToActivityLo
     handleDeleteConfirm,
     handleAddBrand,
     handleDeleteBrand,
-    handleAddAssetType
+    handleAddAssetType,
+    handleDeleteAssetType
   } = useAssetData(CURRENT_USER);
 
   const { selectedRows, hoveredRow, handleCheckboxChange, handleRowClick, clearSelection } = useSelection();
@@ -207,6 +207,24 @@ export default function AssetInventory({ onBackToLanding, onNavigateToActivityLo
   const userOptions = useMemo(() => {
     return ['N/A', 'Admin User', 'IT User', 'Regular User'];
   }, []);
+  // Open Action dialog from accessories table
+  const handleOpenActionDialog = (accessory: any) => {
+    // Step 1: choose desired status first (old flow)
+    setRequestingAccessory(accessory);
+    const next = accessory.status === 'On-Stock' ? 'Reserve' : accessory.status;
+    setSelectedActionStatus(next);
+    setStatusSelectionOpen(true);
+  };
+
+  // Bridge status selection to update selectedActionStatus
+  const handleSelectStatus = (status: 'On-Stock' | 'Reserve' | 'Issued' | 'Maintenance' | 'Retired') => {
+    setSelectedActionStatus(status);
+    handleStatusSelection(status);
+    // Step 2: open action dialog after picking status
+    setStatusSelectionOpen(false);
+    setActionDialogOpen(true);
+  };
+
 
   const assetTypes = activeDashboard === 'equipments'
     ? Array.from(new Set(assets.map((asset: any) => asset.assetType).filter((type: any) => type && type.trim() !== '')))
@@ -223,17 +241,13 @@ export default function AssetInventory({ onBackToLanding, onNavigateToActivityLo
       <SettingsPanel
         open={settingsPanelOpen}
         onClose={() => setSettingsPanelOpen(false)}
-        brandOptions={brandOptions}
-        onBrandOptionsChange={setBrandOptions}
-        onAddBrand={handleAddBrand}
-        onDeleteBrand={handleDeleteBrand}
-        assetTypeOptions={assetTypeOptions}
-        onAssetTypeOptionsChange={setAssetTypeOptions}
-        onAddAssetType={handleAddAssetType}
         onActivityLogOpen={() => {
+          console.log('🔍 [AssetInventory] Activity Log clicked, calling onNavigateToActivityLog');
+          setSettingsPanelOpen(false);
           if (onNavigateToActivityLog) {
             onNavigateToActivityLog();
-            setSettingsPanelOpen(false);
+          } else {
+            console.error('❌ [AssetInventory] onNavigateToActivityLog is not defined!');
           }
         }}
         onGoBackToMainPage={() => {
@@ -241,18 +255,8 @@ export default function AssetInventory({ onBackToLanding, onNavigateToActivityLo
         }}
       />
 
-      {/* Activity Log Page */}
-      <ActivityLogPage
-        open={activityLogOpen}
-        onClose={() => {
-          setActivityLogOpen(false);
-          setShowMainPage(true);
-        }}
-        activities={[]}
-      />
-
-      {showMainPage && !activityLogOpen && (
-        <>
+      {/* Main Content */}
+      <>
           <AssetInventoryHeader
             activeDashboard={activeDashboard}
             onDashboardChange={setActiveDashboard}
@@ -273,6 +277,14 @@ export default function AssetInventory({ onBackToLanding, onNavigateToActivityLo
             onBulkUpdateStatus={() => {}}
             onBulkUpdateLocation={() => {}}
             onClearSelection={clearSelection}
+            brandOptions={brandOptions}
+            onBrandOptionsChange={setBrandOptions}
+            onAddBrand={handleAddBrand}
+            onDeleteBrand={handleDeleteBrand}
+            assetTypeOptions={assetTypeOptions}
+            onAssetTypeOptionsChange={setAssetTypeOptions}
+            onAddAssetType={handleAddAssetType}
+            onDeleteAssetType={handleDeleteAssetType}
           />
 
           <AssetInventoryTable
@@ -295,7 +307,7 @@ export default function AssetInventory({ onBackToLanding, onNavigateToActivityLo
             onSort={handleSort}
             onGlobalLockToggle={handleGlobalLockToggle}
             onMouseDown={handleMouseDown}
-            onRequestAccessory={handleRequestAccessory}
+            onRequestAccessory={handleOpenActionDialog}
             onReturnAccessory={handleReturnAccessory}
             onIssueReserved={handleIssueReserved}
             onDeleteColumn={confirmDeleteColumn}
@@ -313,14 +325,13 @@ export default function AssetInventory({ onBackToLanding, onNavigateToActivityLo
             onItemsPerPageChange={handleItemsPerPageChange}
             onPageChange={setCurrentPage}
           />
-        </>
-      )}
+      </>
 
       {/* Dialogs */}
       <AssetDialog
         open={dialogOpen}
         onClose={closeDialog}
-        onSave={handleAddAsset}
+        onSave={editingAsset ? (asset: any) => handleUpdateAsset(editingAsset.id, asset) : handleAddAsset}
         onDelete={handleDeleteAsset}
         onDuplicate={handleDuplicateAsset}
         currentUser={CURRENT_USER}
@@ -335,7 +346,7 @@ export default function AssetInventory({ onBackToLanding, onNavigateToActivityLo
         open={accessoriesDialogOpen}
         onOpenChange={closeAccessoriesDialog}
         accessory={editingAccessory}
-        onSave={handleAddAccessory}
+        onSave={editingAccessory ? (acc: any) => handleUpdateAccessory(editingAccessory.id, acc) : handleAddAccessory}
         onDeleteClick={handleDeleteClick}
         assetTypeOptions={assetTypeOptions}
         brandOptions={brandOptions}
@@ -352,7 +363,7 @@ export default function AssetInventory({ onBackToLanding, onNavigateToActivityLo
       <StatusSelectionDialog
         open={statusSelectionOpen}
         onOpenChange={setStatusSelectionOpen}
-        onSelectStatus={handleStatusSelection}
+        onSelectStatus={handleSelectStatus}
       />
 
       <ActionDialog

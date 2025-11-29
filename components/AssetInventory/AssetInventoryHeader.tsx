@@ -29,6 +29,14 @@ interface AssetInventoryHeaderProps {
   onBulkUpdateStatus: (status: string) => void;
   onBulkUpdateLocation: (location: string) => void;
   onClearSelection: () => void;
+  brandOptions?: string[];
+  onBrandOptionsChange?: (options: string[]) => void;
+  onAddBrand?: (brandName: string) => void;
+  onDeleteBrand?: (brandName: string) => void;
+  assetTypeOptions?: string[];
+  onAssetTypeOptionsChange?: (options: string[]) => void;
+  onAddAssetType?: (assetType: string) => void;
+  onDeleteAssetType?: (assetType: string) => void;
 }
 
 export default function AssetInventoryHeader({
@@ -51,6 +59,15 @@ export default function AssetInventoryHeader({
   onBulkUpdateStatus,
   onBulkUpdateLocation,
   onClearSelection
+  ,
+  brandOptions,
+  onBrandOptionsChange,
+  onAddBrand,
+  onDeleteBrand,
+  assetTypeOptions,
+  onAssetTypeOptionsChange,
+  onAddAssetType,
+  onDeleteAssetType
 }: AssetInventoryHeaderProps) {
   return (
     <div className="max-w-[1600px] mx-auto mb-8">
@@ -100,10 +117,14 @@ export default function AssetInventoryHeader({
               hasSelection={selectedRows.size > 0}
             />
             <ColumnOptionsMenu
-              brandOptions={[]}
-              onBrandOptionsChange={() => {}}
-              assetTypeOptions={[]}
-              onAssetTypeOptionsChange={() => {}}
+              brandOptions={brandOptions ?? []}
+              onBrandOptionsChange={onBrandOptionsChange ?? (() => {})}
+              onAddBrand={onAddBrand}
+              onDeleteBrand={onDeleteBrand}
+              assetTypeOptions={assetTypeOptions ?? []}
+              onAssetTypeOptionsChange={onAssetTypeOptionsChange ?? (() => {})}
+              onAddAssetType={onAddAssetType}
+              onDeleteAssetType={onDeleteAssetType}
             />
             <Button 
               onClick={onAddItem} 

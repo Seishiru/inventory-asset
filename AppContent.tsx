@@ -13,7 +13,7 @@ import AssetInventory from './components/AssetInventory';
 import { Button } from './components/ui/button';
 import { ArrowLeft, Users, Package } from 'lucide-react';
 
-const API_BASE_URL = 'http://localhost:3000/api';
+const API_BASE_URL = 'http://localhost:4000';
 
 export default function AppContent() {
   const { isAuthenticated } = useAuth();
@@ -39,6 +39,28 @@ export default function AppContent() {
         if (accessoriesResponse.ok) {
           const accessoriesData = await accessoriesResponse.json();
           setAccessories(accessoriesData.items || accessoriesData);
+        }
+        // Load user management entries and normalize to frontend shape
+        const usersResponse = await fetch(`${API_BASE_URL}/usermanagement`);
+        if (usersResponse.ok) {
+          const usersData = await usersResponse.json();
+          const mapped = (usersData || []).map((u: any, i: number) => {
+            const pos = u.Position || u.position || 'Agent';
+            const normalizePos = pos === 'CSAgent' ? 'CSagent' : pos;
+            const statusRaw = u.Status || u.status || 'Active';
+            return {
+              id: String(u.id),
+              index: i,
+              email: (u.Email || u.email || '').toLowerCase(),
+              name: u.Name || u.name || '',
+              password: u.Password || u.password || '',
+              status: (String(statusRaw)).toLowerCase(),
+              position: normalizePos,
+              createdAt: u.createdAt || new Date().toISOString(),
+              lastLogin: u.lastLogin || null,
+            };
+          });
+          setUsers(mapped);
         }
       } catch (error) {
         console.error('Error loading data:', error);
@@ -94,10 +116,14 @@ export default function AppContent() {
   };
 
   const handleNavigate = (page: 'landing' | 'inventory' | 'user-management' | 'reports' | 'monthly-reports' | 'activity-log') => {
+    console.log('🚀 [AppContent] handleNavigate called with page:', page);
+    console.log('📍 [AppContent] Current page before navigation:', currentPage);
     setCurrentPage(page);
+    console.log('✅ [AppContent] setCurrentPage called, should now be:', page);
   };
 
   const renderCurrentPage = () => {
+    console.log('🎨 [AppContent] renderCurrentPage called, currentPage:', currentPage);
     switch (currentPage) {
       case 'landing':
         return <LandingPage onNavigate={handleNavigate} />;
@@ -158,7 +184,8 @@ export default function AppContent() {
           </div>
         );
       case 'activity-log':
-        return <ActivityLogFullPage activities={activities} onBack={() => handleNavigate('landing')} />;
+        console.log('📊 [AppContent] Rendering ActivityLogFullPage');
+        return <ActivityLogFullPage onBack={() => handleNavigate('landing')} />;
       default:
         return <LandingPage onNavigate={handleNavigate} />;
     }

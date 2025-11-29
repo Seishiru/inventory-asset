@@ -1,0 +1,137 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+model loginuser {
+  id       Int      @id @default(autoincrement())
+  username String   @db.VarChar(50)
+  email    String   @unique @db.VarChar(100)
+  password String   @db.VarChar(255)
+  role     Role
+}
+
+// Options for asset types
+model AssetTypeOption {
+  id        Int    @id @default(autoincrement())
+  assetType String @unique @db.VarChar(200)
+}
+
+// Options for brand/make
+model BrandMakeOption {
+  id        Int    @id @default(autoincrement())
+  brandMake String @unique @db.VarChar(200)
+}
+
+model ActivityLog {
+  id        Int      @id @default(autoincrement())
+  type      String   @db.VarChar(100)
+  username  String   @db.VarChar(100)
+  action    String   @db.VarChar(200)
+  details   String?  @db.Text
+  timestamp DateTime @default(now())
+
+  // optional relations to assets/accessories
+  equipmentAssetId Int?
+  accessoryAssetId Int?
+}
+
+enum Status {
+  On_Stock
+  Maintenance
+  Retired
+  Reserved
+  Issued
+}
+
+// Equipment asset
+model EquipmentAsset {
+  id           Int      @id @default(autoincrement())
+  assetType    String   @db.VarChar(200)
+  brandMake    String   @db.VarChar(200)
+  modelNumber  String   @db.VarChar(200)
+  serialNumber String   @unique @db.VarChar(200)
+  barcode      String?  @db.VarChar(400)
+  description  String?  @db.Text
+  status       Status   @default(On_Stock)
+  location     String?  @db.VarChar(200)
+  username     String?  @db.VarChar(100)
+  assetImage   String?  @db.VarChar(400)
+  attachment   String?  @db.Text
+  comments     String?  @db.Text
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+}
+
+// Accessory asset
+model AccessoryAsset {
+  id           Int      @id @default(autoincrement())
+  assetType    String   @db.VarChar(200)
+  modelNumber  String?  @db.VarChar(200)
+  brandMake    String?  @db.VarChar(200)
+  serialNumber String?  @db.VarChar(200)
+  barcode      String?  @db.VarChar(400)
+  quantity     Int      @default(1)
+  status       Status   @default(On_Stock)
+  location     String?  @db.VarChar(200)
+  attachment   String?  @db.Text
+  comments     String?  @db.Text
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+}
+
+model UserManagement {
+  id       Int                        @id @default(autoincrement())
+  Email    String?                    @unique @db.VarChar(255)
+  Name     String                     @db.VarChar(255)
+  Password String?                    @db.VarChar(255)
+  Status   UserStatus?                @default(Active)
+  Position UserPosition?              @default(Other)
+}
+
+model MonthlyReport {
+  id                       Int      @id @default(autoincrement())
+  totalAssetTypes          Int      @default(0)
+  totalOnStock             Int      @default(0)
+  totalIssued              Int      @default(0)
+  underMaintenance         Int      @default(0)
+  totalRetired             Int      @default(0)
+  totalAssets              Int      @default(0)
+  assetDistributionByType  Json?
+  archived                 Boolean  @default(false)
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
+}
+
+model AuditLog {
+  id        Int      @id @default(autoincrement())
+  username  String   @db.VarChar(100)
+  action    String   @db.VarChar(200)
+  details   String?  @db.Text
+  timestamp DateTime @default(now())
+}
+
+enum Role {
+  IT_OJT @map("IT/OJT")
+  Admin
+}
+
+enum UserStatus {
+  Active
+  Inactive
+}
+
+enum UserPosition {
+  ITech
+  Agent
+  SAdmin
+  CSAgent
+  SAgent
+  TLCSales
+  Other
+}

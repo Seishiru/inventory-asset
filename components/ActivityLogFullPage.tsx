@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Clock, User, Activity, FileDown, Filter, Search, ArrowLeft, Calendar } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Clock, User, Activity, FileDown, Filter, Search, ArrowLeft, Calendar, RefreshCw } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Badge } from './ui/badge';
@@ -20,17 +20,73 @@ export interface ActivityLogEntry {
 }
 
 interface ActivityLogFullPageProps {
-  activities: ActivityLogEntry[];
+  activities?: ActivityLogEntry[];
   onBack: () => void;
 }
 
 export function ActivityLogFullPage({
-  activities,
+  activities: externalActivities,
   onBack,
 }: ActivityLogFullPageProps) {
+  const [activities, setActivities] = useState<ActivityLogEntry[]>(externalActivities || []);
+  const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [userFilter, setUserFilter] = useState<string>('all');
+
+  // Mount detection
+  useEffect(() => {
+    console.log('🎬 [ActivityLogFullPage] Component MOUNTED!');
+    console.log('🎬 [ActivityLogFullPage] External activities prop:', externalActivities);
+    return () => {
+      console.log('💀 [ActivityLogFullPage] Component UNMOUNTED!');
+    };
+  }, []);
+
+  // Load activities from backend
+  useEffect(() => {
+    console.log('🔄 [ActivityLogFullPage] useEffect triggered, externalActivities:', externalActivities);
+    if (!externalActivities) {
+      console.log('⚡ [ActivityLogFullPage] No external activities, loading from backend...');
+      loadActivities();
+    } else {
+      console.log('📥 [ActivityLogFullPage] Using external activities:', externalActivities);
+      setActivities(externalActivities);
+    }
+  }, [externalActivities]);
+
+  const loadActivities = async () => {
+    try {
+      setLoading(true);
+      console.log('🔍 [ActivityLogFullPage] Fetching from http://localhost:4000/activity-log');
+      const response = await fetch('http://localhost:4000/activity-log');
+      console.log('📡 [ActivityLogFullPage] Response status:', response.status, response.statusText);
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('📦 [ActivityLogFullPage] Raw data from backend:', data);
+        console.log('📊 [ActivityLogFullPage] Number of logs:', data.length);
+        
+        const mappedActivities = data.map((log: any) => ({
+          id: String(log.id),
+          timestamp: new Date(log.timestamp),
+          username: log.username,
+          action: log.action,
+          details: log.details,
+          type: log.type,
+        }));
+        
+        console.log('✅ [ActivityLogFullPage] Mapped activities:', mappedActivities);
+        setActivities(mappedActivities);
+      } else {
+        console.error('❌ [ActivityLogFullPage] Failed to fetch:', response.status, response.statusText);
+      }
+    } catch (error) {
+      console.error('❌ [ActivityLogFullPage] Error loading activities:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const getActivityColor = (type: ActivityLogEntry['type']) => {
     switch (type) {
@@ -179,6 +235,15 @@ export function ActivityLogFullPage({
             >
               <FileDown className="h-4 w-4" />
               Export CSV
+            </Button>
+            <Button
+              variant="outline"
+              onClick={loadActivities}
+              disabled={loading}
+              className="gap-2"
+            >
+              <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+              Refresh
             </Button>
           </div>
         </div>

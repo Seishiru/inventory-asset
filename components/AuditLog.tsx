@@ -14,11 +14,12 @@ export interface AuditEntry {
 }
 
 interface AuditLogProps {
-  entries: AuditEntry[];
+  entries?: AuditEntry[];
 }
 
 export function AuditLog({ entries }: AuditLogProps) {
-  const sortedEntries = [...entries].sort((a, b) => 
+  const safeEntries = Array.isArray(entries) ? entries : [];
+  const sortedEntries = [...safeEntries].sort((a, b) =>
     new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
   );
 

@@ -57,10 +57,13 @@ export function AccessoriesTable({
   };
 
   const getStatusColor = (status: string) => {
-    switch (status) {
+    // Accept both backend enum forms (On_Stock, Reserved) and UI forms (On-Stock, Reserve)
+    const s = String(status || '').replace('_', '-');
+    switch (s) {
       case 'On-Stock':
         return 'bg-green-500';
       case 'Reserve':
+      case 'Reserved':
         return 'bg-blue-500';
       case 'Issued':
         return 'bg-purple-500';
@@ -70,6 +73,21 @@ export function AccessoriesTable({
         return 'bg-gray-500';
       default:
         return 'bg-gray-500';
+    }
+  };
+
+  const displayStatus = (status: string) => {
+    if (!status) return '';
+    // Map backend enum to friendly label
+    switch (String(status)) {
+      case 'On_Stock':
+      case 'On-Stock':
+        return 'On-Stock';
+      case 'Reserved':
+      case 'Reserve':
+        return 'Reserve';
+      default:
+        return String(status).replace('_', '-');
     }
   };
 
@@ -210,9 +228,9 @@ export function AccessoriesTable({
 
                 {/* Status */}
                 <TableCell style={{ width: `${columnWidths.status || 120}px` }}>
-                  <Badge className={`${getStatusColor(accessory.status)} text-white`}>
-                    {accessory.status}
-                  </Badge>
+                    <Badge className={`${getStatusColor(accessory.status)} text-white`}>
+                      {displayStatus(accessory.status)}
+                    </Badge>
                 </TableCell>
 
                 {/* Last Updated */}
@@ -221,7 +239,7 @@ export function AccessoriesTable({
                     <div className="text-sm text-gray-600">
                       {new Date(accessory.lastUpdated).toLocaleString()}
                     </div>
-                    {accessory.status === 'On-Stock' && accessory.quantity > 0 && onRequestAccessory && (
+                    {((accessory.status === 'On-Stock' || accessory.status === 'On_Stock') && accessory.quantity > 0) && onRequestAccessory && (
                       <Button
                         size="sm"
                         onClick={(e) => {
@@ -236,7 +254,7 @@ export function AccessoriesTable({
                         Action
                       </Button>
                     )}
-                    {accessory.status === 'Reserve' && onIssueReserved && (
+                    {(accessory.status === 'Reserve' || accessory.status === 'Reserved') && onIssueReserved && (
                       <Button
                         size="sm"
                         onClick={(e) => {
@@ -250,7 +268,9 @@ export function AccessoriesTable({
                         Issue
                       </Button>
                     )}
-                    {(accessory.status === 'Issued' || accessory.status === 'Maintenance' || accessory.status === 'Retired') && onReturnAccessory && (
+                    {((accessory.status === 'Issued' || accessory.status === 'Maintenance' || accessory.status === 'Retired' || accessory.status === 'On_Stock') && onReturnAccessory) && (
+                      // Note: include On_Stock if your app treats returning from stock as a "return" action; adjust as needed
+                      onReturnAccessory && (
                       <Button
                         size="sm"
                         onClick={(e) => {
@@ -263,6 +283,7 @@ export function AccessoriesTable({
                         <Undo2 className="h-3 w-3 mr-1" />
                         Return
                       </Button>
+                      )
                     )}
                   </div>
                 </TableCell>
